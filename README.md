@@ -6,6 +6,7 @@ ZMK Studio は既存の behavior をキーに割り当てるだけで、hold-tap
 
 ## できること
 
+- 文字配列のプリセット：QWERTY（初期）、Dvorak、Colemak、Colemak-DH、大西配列。切り替えてもホームロウmodなどの修飾はそのまま残る
 - S / M / L の物理レイアウトでキー配置を表示・編集（ドラッグで入れ替え、実機のキーを押して指定）
 - hold-tap（ホームロウmod）を GUI で定義：flavor、tapping-term、quick-tap、require-prior-idle、反対の手だけでホールド判定する `hold-trigger-key-positions` をキーボードの図から選択
 - tap-dance、コンボ、自由記述の behavior（マクロ等）
@@ -31,4 +32,4 @@ GitHub Pages で `index.html` を開く。編集内容はブラウザの localSt
 - `src/template.html` — UI・パーサ・ジェネレータ
 - `src/kc.js` — ZMK キーコード表
 - `src/layouts.json` — torabo-tsuki LP の物理レイアウトと position map
-- `src/initial.keymap` — 初期表示のキーマップ
+- `src/initial.keymap` — 初期表示のキーマップ（QWERTY・Base / Num / Nav の3レイヤー）

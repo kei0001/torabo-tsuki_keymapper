@@ -73,6 +73,8 @@ button { cursor: pointer; }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
 .btn.ghost:hover { color: var(--ink); border-color: var(--line); }
 .btn.sm { padding: 2px 8px; font-size: 12px; }
+.presetpick { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.presetpick select { width: auto; padding: 4px 8px; color: var(--ink); }
 .tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
 /* main grid */
@@ -218,6 +220,7 @@ ol.steps { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; font-size: 1
 <div class="app" id="app">
   <div class="top">
     <div class="brand"><h1>torabo-tsuki keymapper</h1><small>torabo-tsuki LP 用 ZMK キーマップ</small></div>
+    <label class="presetpick" for="presetSel"><span>文字配列</span><select id="presetSel"></select></label>
     <div class="seg" id="layoutSeg" role="group" aria-label="物理レイアウト"></div>
     <div class="tools">
       <button class="btn ghost" id="undoBtn" title="元に戻す (⌘Z)">↶ 戻す</button>
@@ -394,7 +397,7 @@ function kcIsMod(s) { const e = KC.byName[kcParse(s).base]; return !!e && e.g ==
 if (typeof module !== 'undefined') module.exports = { KC, kcParse, kcValue, kcFromValue, kcLabel, kcIsMod, MOD_FNS };
 
 const LAYOUTS = {"S": [[100, 100, 0, 60, 0, 0, 0], [100, 100, 100, 25, 0, 0, 0], [100, 100, 200, 0, 0, 0, 0], [100, 100, 300, 13, 0, 0, 0], [100, 100, 400, 25, 0, 0, 0], [100, 100, 950, 25, 0, 0, 0], [100, 100, 1050, 13, 0, 0, 0], [100, 100, 1150, 0, 0, 0, 0], [100, 100, 1250, 25, 0, 0, 0], [100, 100, 1350, 60, 0, 0, 0], [100, 100, 0, 160, 0, 0, 0], [100, 100, 100, 125, 0, 0, 0], [100, 100, 200, 100, 0, 0, 0], [100, 100, 300, 113, 0, 0, 0], [100, 100, 400, 125, 0, 0, 0], [100, 100, 950, 125, 0, 0, 0], [100, 100, 1050, 113, 0, 0, 0], [100, 100, 1150, 100, 0, 0, 0], [100, 100, 1250, 125, 0, 0, 0], [100, 100, 1350, 160, 0, 0, 0], [100, 100, 0, 260, 0, 0, 0], [100, 100, 100, 225, 0, 0, 0], [100, 100, 200, 200, 0, 0, 0], [100, 100, 300, 213, 0, 0, 0], [100, 100, 400, 225, 0, 0, 0], [100, 100, 500, 240, 0, 0, 0], [100, 100, 850, 240, 0, 0, 0], [100, 100, 950, 225, 0, 0, 0], [100, 100, 1050, 213, 0, 0, 0], [100, 100, 1150, 200, 0, 0, 0], [100, 100, 1250, 225, 0, 0, 0], [100, 100, 1350, 260, 0, 0, 0], [100, 100, 0, 360, 0, 0, 0], [100, 100, 100, 325, 0, 0, 0], [100, 100, 200, 300, 0, 0, 0], [100, 100, 315, 350, 0, 0, 0], [100, 100, 420, 350, 1000, 420, 450], [100, 100, 522, 371, 2000, 525, 470], [100, 100, 828, 371, -2000, 925, 470], [100, 100, 930, 350, -1000, 1030, 450], [100, 100, 1035, 350, 0, 0, 0], [100, 100, 1150, 300, 0, 0, 0], [100, 100, 1250, 325, 0, 0, 0], [100, 100, 1350, 360, 0, 0, 0]], "L": [[100, 100, 0, 60, 0, 0, 0], [100, 100, 100, 60, 0, 0, 0], [100, 100, 200, 25, 0, 0, 0], [100, 100, 300, 0, 0, 0, 0], [100, 100, 400, 13, 0, 0, 0], [100, 100, 500, 25, 0, 0, 0], [100, 100, 1050, 25, 0, 0, 0], [100, 100, 1150, 13, 0, 0, 0], [100, 100, 1250, 0, 0, 0, 0], [100, 100, 1350, 25, 0, 0, 0], [100, 100, 1450, 60, 0, 0, 0], [100, 100, 1550, 60, 0, 0, 0], [100, 100, 0, 160, 0, 0, 0], [100, 100, 100, 160, 0, 0, 0], [100, 100, 200, 125, 0, 0, 0], [100, 100, 300, 100, 0, 0, 0], [100, 100, 400, 113, 0, 0, 0], [100, 100, 500, 125, 0, 0, 0], [100, 100, 1050, 125, 0, 0, 0], [100, 100, 1150, 113, 0, 0, 0], [100, 100, 1250, 100, 0, 0, 0], [100, 100, 1350, 125, 0, 0, 0], [100, 100, 1450, 160, 0, 0, 0], [100, 100, 1550, 160, 0, 0, 0], [100, 100, 0, 260, 0, 0, 0], [100, 100, 100, 260, 0, 0, 0], [100, 100, 200, 225, 0, 0, 0], [100, 100, 300, 200, 0, 0, 0], [100, 100, 400, 213, 0, 0, 0], [100, 100, 500, 225, 0, 0, 0], [100, 100, 600, 240, 0, 0, 0], [100, 100, 950, 240, 0, 0, 0], [100, 100, 1050, 225, 0, 0, 0], [100, 100, 1150, 213, 0, 0, 0], [100, 100, 1250, 200, 0, 0, 0], [100, 100, 1350, 225, 0, 0, 0], [100, 100, 1450, 260, 0, 0, 0], [100, 100, 1550, 260, 0, 0, 0], [100, 100, 0, 360, 0, 0, 0], [100, 100, 100, 360, 0, 0, 0], [100, 100, 200, 325, 0, 0, 0], [100, 100, 300, 300, 0, 0, 0], [100, 100, 400, 313, 0, 0, 0], [100, 100, 500, 325, 0, 0, 0], [100, 100, 600, 340, 0, 0, 0], [100, 100, 950, 340, 0, 0, 0], [100, 100, 1050, 325, 0, 0, 0], [100, 100, 1150, 313, 0, 0, 0], [100, 100, 1250, 300, 0, 0, 0], [100, 100, 1350, 325, 0, 0, 0], [100, 100, 1450, 360, 0, 0, 0], [100, 100, 1550, 360, 0, 0, 0], [100, 100, 0, 460, 0, 0, 0], [100, 100, 100, 460, 0, 0, 0], [100, 100, 200, 425, 0, 0, 0], [100, 100, 300, 400, 0, 0, 0], [100, 100, 415, 450, 0, 0, 0], [100, 100, 520, 450, 1000, 520, 550], [100, 100, 622, 471, 2000, 625, 570], [100, 100, 928, 471, -2000, 1025, 570], [100, 100, 1030, 450, -1000, 1130, 550], [100, 100, 1135, 450, 0, 0, 0], [100, 100, 1250, 400, 0, 0, 0], [100, 100, 1350, 425, 0, 0, 0], [100, 100, 1450, 460, 0, 0, 0], [100, 100, 1550, 460, 0, 0, 0]], "M": [[100, 100, 0, 60, 0, 0, 0], [100, 100, 100, 60, 0, 0, 0], [100, 100, 200, 25, 0, 0, 0], [100, 100, 300, 0, 0, 0, 0], [100, 100, 400, 13, 0, 0, 0], [100, 100, 500, 25, 0, 0, 0], [100, 100, 1050, 25, 0, 0, 0], [100, 100, 1150, 13, 0, 0, 0], [100, 100, 1250, 0, 0, 0, 0], [100, 100, 1350, 25, 0, 0, 0], [100, 100, 1450, 60, 0, 0, 0], [100, 100, 1550, 60, 0, 0, 0], [100, 100, 0, 160, 0, 0, 0], [100, 100, 100, 160, 0, 0, 0], [100, 100, 200, 125, 0, 0, 0], [100, 100, 300, 100, 0, 0, 0], [100, 100, 400, 113, 0, 0, 0], [100, 100, 500, 125, 0, 0, 0], [100, 100, 1050, 125, 0, 0, 0], [100, 100, 1150, 113, 0, 0, 0], [100, 100, 1250, 100, 0, 0, 0], [100, 100, 1350, 125, 0, 0, 0], [100, 100, 1450, 160, 0, 0, 0], [100, 100, 1550, 160, 0, 0, 0], [100, 100, 0, 260, 0, 0, 0], [100, 100, 100, 260, 0, 0, 0], [100, 100, 200, 225, 0, 0, 0], [100, 100, 300, 200, 0, 0, 0], [100, 100, 400, 213, 0, 0, 0], [100, 100, 500, 225, 0, 0, 0], [100, 100, 600, 240, 0, 0, 0], [100, 100, 950, 240, 0, 0, 0], [100, 100, 1050, 225, 0, 0, 0], [100, 100, 1150, 213, 0, 0, 0], [100, 100, 1250, 200, 0, 0, 0], [100, 100, 1350, 225, 0, 0, 0], [100, 100, 1450, 260, 0, 0, 0], [100, 100, 1550, 260, 0, 0, 0], [100, 100, 0, 360, 0, 0, 0], [100, 100, 100, 360, 0, 0, 0], [100, 100, 200, 325, 0, 0, 0], [100, 100, 300, 300, 0, 0, 0], [100, 100, 415, 350, 0, 0, 0], [100, 100, 520, 350, 1000, 520, 450], [100, 100, 622, 371, 2000, 625, 470], [100, 100, 928, 371, -2000, 1025, 470], [100, 100, 1030, 350, -1000, 1130, 450], [100, 100, 1135, 350, 0, 0, 0], [100, 100, 1250, 300, 0, 0, 0], [100, 100, 1350, 325, 0, 0, 0], [100, 100, 1450, 360, 0, 0, 0], [100, 100, 1550, 360, 0, 0, 0]], "Smap": [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 57, 58, 10, 11, 12, 13, 14, 64, 65, 15, 16, 17, 18, 19, 59, 60, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 61, 62, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 63], "Mmap": [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 64, 65, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]};
-const INITIAL = "#include <behaviors.dtsi>\n#include <dt-bindings/zmk/bt.h>\n#include <dt-bindings/zmk/keys.h>\n#include <dt-bindings/zmk/outputs.h>\n#include <dt-bindings/zmk/pointing.h>\n\n/ {\n    behaviors {\n        td0: tap_dance_0 {\n            compatible = \"zmk,behavior-tap-dance\";\n            display-name = \"TD0\";\n            #binding-cells = <0>;\n            tapping-term-ms = <200>;\n            bindings = <&kp LPAR>, <&kp LT>;\n        };\n        td1: tap_dance_1 {\n            compatible = \"zmk,behavior-tap-dance\";\n            display-name = \"TD1\";\n            #binding-cells = <0>;\n            tapping-term-ms = <200>;\n            bindings = <&kp RPAR>, <&kp GT>;\n        };\n    };\n\n    keymap {\n        compatible = \"zmk,keymap\";\n        layer_0 {\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp Q  &kp L  &kp U  &kp MINUS  &kp BSPC  &kp F  &kp W  &kp R  &kp Y  &kp P  &trans  &trans  &mt LCTRL E  &mt LSHFT I  &mt LALT A  &mt LGUI O  &kp COMMA  &trans  &trans  &kp K  &mt RGUI T  &mt RALT N  &mt RSHFT S  &mt RCTRL H  &trans  &trans  &kp Z  &kp X  &kp C  &kp V  &kp DOT  &kp TAB  &kp RET  &kp G  &kp D  &kp M  &kp J  &kp B  &trans  &trans  &kp ESC  &bt BT_NXT  &mo 3  &kp LANG2  &kp SPACE  &kp RET  &mo 1  &lt 2 LANG1  &trans  &trans  &mkp LCLK  &mkp RCLK  &trans\n            >;\n        };\n        layer_1 {\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp N7  &kp N8  &kp N9  &trans  &trans  &trans  &trans  &trans  &kp PRCNT  &trans  &trans  &kp COLON  &kp N4  &kp N5  &kp N6  &trans  &trans  &trans  &trans  &mkp LCLK  &mkp RCLK  &trans  &trans  &trans  &trans  &kp N0  &kp N1  &kp N2  &kp N3  &trans  &trans  &trans  &kp PLUS  &kp MINUS  &kp STAR  &kp FSLH  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n        layer_2 {\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp SQT  &kp DQT  &kp UNDER  &td0  &td1  &trans  &trans  &trans  &kp CARET  &kp PRCNT  &trans  &trans  &kp EQUAL  &trans  &kp AMPS  &kp LBKT  &kp RBKT  &trans  &trans  &kp STAR  &kp SQT  &kp TILDE  &kp FSLH  &kp HASH  &trans  &trans  &trans  &kp SEMI  &kp COLON  &kp PIPE  &trans  &trans  &trans  &trans  &kp DLLR  &kp AT  &trans  &kp BSLH  &trans  &trans  &trans  &trans  &trans  &kp EXCL  &kp QMARK  &trans  &trans  &kp TAB  &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n        layer_3 {\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp F1  &kp F2  &kp F3  &kp F4  &kp F5  &kp HOME  &kp PG_UP  &kp PG_DN  &kp END  &kp ESC  &trans  &trans  &kp F6  &kp F7  &kp F8  &kp F9  &kp F10  &trans  &trans  &kp LEFT  &kp DOWN  &kp UP  &kp RIGHT  &kp TAB  &trans  &trans  &kp F11  &kp F12  &out OUT_USB  &out OUT_BLE  &bt BT_NXT  &trans  &trans  &kp SQT  &kp DQT  &kp GRAVE  &kp TILDE  &kp PIPE  &trans  &trans  &trans  &trans  &trans  &kp DEL  &kp TAB  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n        layer_4 {\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n    };\n};\n";
+const INITIAL = "#include <behaviors.dtsi>\n#include <dt-bindings/zmk/bt.h>\n#include <dt-bindings/zmk/keys.h>\n#include <dt-bindings/zmk/outputs.h>\n#include <dt-bindings/zmk/pointing.h>\n\n/ {\n    keymap {\n        compatible = \"zmk,keymap\";\n        base_layer {\n            display-name = \"Base\";\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp Q  &kp W  &kp E  &kp R  &kp T  &kp Y  &kp U  &kp I  &kp O  &kp P  &trans  &trans  &kp A  &kp S  &kp D  &kp F  &kp G  &trans  &trans  &kp H  &kp J  &kp K  &kp L  &kp SEMI  &trans  &trans  &kp Z  &kp X  &kp C  &kp V  &kp B  &kp TAB  &kp ESC  &kp N  &kp M  &kp COMMA  &kp DOT  &kp FSLH  &trans  &trans  &kp LSHFT  &kp LCTRL  &kp LALT  &kp LGUI  &kp SPACE  &lt 1 LANG2  &lt 2 LANG1  &kp RET  &kp BSPC  &mkp LCLK  &mkp RCLK  &kp RSHFT  &trans\n            >;\n        };\n        num_layer {\n            display-name = \"Num\";\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp N1  &kp N2  &kp N3  &kp N4  &kp N5  &kp N6  &kp N7  &kp N8  &kp N9  &kp N0  &trans  &trans  &kp EXCL  &kp AT  &kp HASH  &kp DLLR  &kp PRCNT  &trans  &trans  &kp CARET  &kp AMPS  &kp STAR  &kp LPAR  &kp RPAR  &trans  &trans  &kp GRAVE  &kp BSLH  &kp MINUS  &kp EQUAL  &kp LBKT  &trans  &trans  &kp RBKT  &kp SQT  &kp UNDER  &kp PLUS  &kp PIPE  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp DEL  &trans  &trans  &trans  &trans\n            >;\n        };\n        nav_layer {\n            display-name = \"Nav\";\n            bindings = <\n&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp F1  &kp F2  &kp F3  &kp F4  &kp F5  &kp HOME  &kp PG_DN  &kp PG_UP  &kp END  &kp DEL  &trans  &trans  &kp F6  &kp F7  &kp F8  &kp F9  &kp F10  &trans  &trans  &kp LEFT  &kp DOWN  &kp UP  &kp RIGHT  &kp C_VOL_UP  &trans  &trans  &kp F11  &kp F12  &out OUT_USB  &out OUT_BLE  &bt BT_NXT  &trans  &trans  &kp C_PREV  &kp C_PP  &kp C_NEXT  &kp C_MUTE  &kp C_VOL_DN  &trans  &trans  &bt BT_CLR  &studio_unlock  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans\n            >;\n        };\n    };\n};\n";
 </script>
 <script>
 "use strict";
@@ -790,11 +793,49 @@ function face(b) {
   return f;
 }
 
+/* ---------- alpha layout presets ---------- */
+const ALPHA_POS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 26, 27, 28, 29, 32, 33, 34, 35, 36, 39, 40, 41, 42, 43, 46, 47, 48, 49, 50];
+const PRESETS = [
+  ['qwerty', 'QWERTY', 'QWERTYUIOPASDFGHJKL;ZXCVBNM,./'],
+  ['dvorak', 'Dvorak', "',.PYFGCRLAOEUIDHTNS;QJKXBMWVZ"],
+  ['colemak', 'Colemak', 'QWFPGJLUY;ARSTDHNEIOZXCVBKM,./'],
+  ['colemak-dh', 'Colemak-DH', 'QWFPBJLUY;ARSTGMNEIOZXCDVKH,./'],
+  ['onishi', '大西配列', 'QLU,.FWRYPEIAO-KTNSHZXCV;GDMJB'],
+];
+const CHAR_KEY = { ';': 'SEMI', ',': 'COMMA', '.': 'DOT', '/': 'FSLH', "'": 'SQT', '-': 'MINUS' };
+const charKey = c => CHAR_KEY[c] || c;
+const tapIndex = b => spec(b.beh).params.lastIndexOf('key');
+function currentPreset() {
+  const L = S.layers[0].bindings;
+  for (const [id, , str] of PRESETS) {
+    const ok = ALPHA_POS.every((p, i) => {
+      const b = L[p]; if (!b) return false;
+      const ti = tapIndex(b); if (ti < 0) return false;
+      const { mods, base } = kcParse(b.params[ti]);
+      return !mods.length && KC.byName[base] && KC.byName[base] === KC.byName[charKey(str[i])];
+    });
+    if (ok) return id;
+  }
+  return null;
+}
+function applyPreset(id) {
+  const pr = PRESETS.find(x => x[0] === id); if (!pr) return;
+  const L = S.layers[0].bindings;
+  ALPHA_POS.forEach((p, i) => {
+    const k = charKey(pr[2][i]), b = L[p], ti = b ? tapIndex(b) : -1;
+    if (ti >= 0) b.params[ti] = k; else L[p] = { beh: 'kp', params: [k] };
+  });
+  commit(); toast(pr[1] + ' に切り替えた（ホームロウmodなどの修飾はそのまま）');
+}
+
 /* ---------- render: header & layers ---------- */
 function renderTop() {
   const seg = $('#layoutSeg'); seg.innerHTML = '';
   [['S', 'S（44キー）'], ['M', 'M（52）'], ['L', 'L（66）']].forEach(([k, l]) =>
     seg.append(h('button', { 'aria-pressed': String(S.layout === k), onclick: () => { S.layout = k; commit(); } }, l)));
+  const ps = $('#presetSel'), cur = currentPreset(); ps.innerHTML = '';
+  if (!cur) ps.append(h('option', { value: '', selected: true }, 'カスタム'));
+  PRESETS.forEach(([id, name]) => ps.append(h('option', { value: id, selected: id === cur }, name)));
   $('#undoBtn').disabled = !hist.length; $('#redoBtn').disabled = !fut.length;
 }
 function renderLayers() {
@@ -1342,7 +1383,7 @@ function renderModal() {
     h('p', { class: 'hint', style: { margin: 0 } }, 'zmk-config の .keymap を貼り付けるか、ファイルを選ぶ。今の編集内容は置き換わる（⌘Zで戻せる）。'),
     h('div', { class: 'row' }, file), ta, errEl,
     h('div', { class: 'row', style: { justifyContent: 'space-between' } },
-      h('button', { class: 'btn ghost', onclick: () => { try { const st = parseKeymap(INITIAL); st.layout = S.layout; S = st; ui.layer = 0; ui.sel = null; ui.pick = null; ui.modal = null; commit(); toast('UF2から復元した配列に戻した'); } catch (e) { errEl.textContent = e.message; } } }, 'UF2（10/11）から復元した配列に戻す'),
+      h('button', { class: 'btn ghost', onclick: () => { try { const st = parseKeymap(INITIAL); st.layout = S.layout; S = st; ui.layer = 0; ui.sel = null; ui.pick = null; ui.modal = null; commit(); toast('初期のキーマップに戻した'); } catch (e) { errEl.textContent = e.message; } } }, '初期のキーマップに戻す'),
       h('div', { class: 'row' }, h('button', { class: 'btn', onclick: close }, 'キャンセル'), h('button', { class: 'btn primary', onclick: doImport }, '読み込む'))));
   const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) close(); } }, modal);
   root.append(ov); setTimeout(() => ta.focus());
@@ -1353,6 +1394,7 @@ function render() {
   if (ui.sel != null && !(ui.sel in (S.layers[ui.layer]?.bindings || []))) ui.sel = null;
   renderTop(); renderLayers(); renderBoard(); renderInsp(); renderDrawer(); renderModal();
 }
+$('#presetSel').onchange = e => { if (e.target.value) applyPreset(e.target.value); };
 $('#undoBtn').onclick = undo; $('#redoBtn').onclick = redo;
 $('#importBtn').onclick = () => { ui.modal = 'import'; render(); };
 $('#exportBtn').onclick = () => { ui.tab = 'out'; render(); $('#dbody').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
