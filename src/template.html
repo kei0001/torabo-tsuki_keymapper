@@ -1,0 +1,1226 @@
+<title>torabo-tsuki keymapper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a workbench — keyboard plate on top at full width, inspector beside it on wide screens, config drawers below. */
+:root {
+  --bg: #e8eaee;
+  --panel: #f6f7f9;
+  --sunk: #dfe2e8;
+  --ink: #151a23;
+  --muted: #5b6474;
+  --line: #ccd1da;
+  --key: #fdfdfe;
+  --key-edge: #b6bdc9;
+  --key-trans: #eef0f3;
+  --accent: #2c44d6;
+  --accent-soft: #dfe4ff;
+  --warn: #a35a00;
+  --warn-bg: #fff1dc;
+  --err: #b42318;
+  --err-bg: #fde7e4;
+  --ok: #1d7a46;
+  --lc: 52%;
+  --lch: .16;
+  --code-bg: #10141b;
+  --code-ink: #d6dbe5;
+  --f-display: "Bricolage Grotesque", "IBM Plex Sans JP", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans JP", "Hiragino Sans", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111419; --panel: #181c23; --sunk: #0d1014; --ink: #e5e8ee; --muted: #8e97a7; --line: #2a303b;
+    --key: #232833; --key-edge: #3b4250; --key-trans: #1b1f27; --accent: #8fa0ff; --accent-soft: #252c55;
+    --warn: #f0b45c; --warn-bg: #33270f; --err: #ff8a7a; --err-bg: #3a1714; --ok: #6fd39b;
+    --lc: 78%; --lch: .13; --code-bg: #0a0c10; --code-ink: #d6dbe5; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111419; --panel: #181c23; --sunk: #0d1014; --ink: #e5e8ee; --muted: #8e97a7; --line: #2a303b;
+  --key: #232833; --key-edge: #3b4250; --key-trans: #1b1f27; --accent: #8fa0ff; --accent-soft: #252c55;
+  --warn: #f0b45c; --warn-bg: #33270f; --err: #ff8a7a; --err-bg: #3a1714; --ok: #6fd39b;
+  --lc: 78%; --lch: .13; --code-bg: #0a0c10; --code-ink: #d6dbe5; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scrollbar-gutter: stable; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.55; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.app { max-width: 1380px; margin: 0 auto; padding-inline: 16px; padding-block: 14px 48px; display: grid; gap: 14px; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; min-width: 0; }
+.brand h1 { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: -.01em; margin: 0; }
+.brand small { color: var(--muted); font-size: 12px; }
+.seg { display: inline-flex; background: var(--sunk); border-radius: 9px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 7px; font-size: 12.5px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .12); font-weight: 600; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 5px 11px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--key-edge); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 600; }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.ghost:hover { color: var(--ink); border-color: var(--line); }
+.btn.sm { padding: 2px 8px; font-size: 12px; }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+/* main grid */
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
+@media (max-width: 980px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.plate { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; min-width: 0; }
+.layers { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.ltab { --h: 250; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 3px 12px 3px 8px; font-size: 13px; display: inline-flex; align-items: center; gap: 7px; }
+.ltab .dot { width: 9px; height: 9px; border-radius: 50%; background: oklch(var(--lc) var(--lch) var(--h)); }
+.ltab .idx { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.ltab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ltab[aria-selected="true"] .idx { color: inherit; opacity: .7; }
+.ltab input { width: 9em; border: 0; background: transparent; padding: 0; outline: none; }
+.layer-tools { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+
+.boardwrap { position: relative; overflow-x: auto; }
+.board { position: relative; margin: 6px auto 0;
+  background-image: radial-gradient(circle, var(--line) 1px, transparent 1.2px);
+  background-size: var(--s) var(--s); background-position: calc(var(--s) * -.5) calc(var(--s) * -.5); border-radius: 8px; }
+.key { position: absolute; border: 1px solid var(--key-edge); border-bottom-width: 3px; border-radius: 7px; background: var(--key);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px; text-align: center;
+  user-select: none; cursor: pointer; transition: box-shadow .12s, background .12s; overflow: hidden; }
+.key:hover { box-shadow: 0 0 0 2px var(--accent-soft); }
+.key.sel { box-shadow: 0 0 0 2.5px var(--accent); z-index: 2; }
+.key.trans { background: var(--key-trans); border-style: dashed; border-bottom-width: 1px; }
+.key .tap { font-weight: 600; font-size: calc(var(--s) * .27); line-height: 1.05; max-width: 100%; overflow-wrap: anywhere; }
+.key .tap.long { font-size: calc(var(--s) * .17); }
+.key .tap.xlong { font-size: calc(var(--s) * .13); }
+.key .hold { font-family: var(--f-mono); font-size: calc(var(--s) * .17); color: var(--accent); line-height: 1.1; margin-top: 2px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.key .hold.layer { color: oklch(var(--lc) var(--lch) var(--h)); font-weight: 600; }
+.key.ht { border-bottom-color: var(--accent); }
+.key.ht.std { border-bottom-color: var(--warn); }
+.key.ht.std .hold { color: var(--warn); }
+.key.lay { background: color-mix(in oklch, var(--key) 82%, oklch(var(--lc) var(--lch) var(--h))); }
+.key .pos { position: absolute; top: 2px; left: 4px; font-family: var(--f-mono); font-size: calc(var(--s) * .105); color: var(--muted); opacity: .8; }
+.key .tr { font-size: calc(var(--s) * .2); color: var(--muted); opacity: .55; }
+.key .tr small { display: block; font-size: calc(var(--s) * .12); }
+.key.drop { box-shadow: 0 0 0 2.5px var(--ok); }
+.board.picking .key { opacity: .55; }
+.board.picking .key.picked { opacity: 1; background: var(--accent); color: var(--panel); border-color: var(--accent); }
+.board.picking .key.picked .hold, .board.picking .key.picked .pos { color: var(--panel); }
+.board.picking .key.owner { opacity: 1; box-shadow: 0 0 0 2.5px var(--warn); }
+.pickbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--accent-soft); border-radius: 10px; padding: 8px 12px; margin-top: 10px; font-size: 13px; }
+.pickbar b { font-family: var(--f-mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 12px; margin-top: 10px; }
+.legend i { display: inline-block; width: 18px; height: 0; border-bottom: 3px solid var(--accent); vertical-align: middle; margin-right: 5px; }
+.legend i.std { border-color: var(--warn); }
+
+/* inspector */
+.insp { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 12px; min-width: 0; position: sticky; top: env(safe-area-inset-top, 0px); }
+@media (max-width: 980px) { .insp { position: static; } }
+.insp h2, .drawer h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 600; }
+.insp .where { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.insp .where strong { font-family: var(--f-display); font-size: 20px; font-weight: 800; }
+.insp .where span { color: var(--muted); font-size: 12.5px; }
+.empty { color: var(--muted); font-size: 13px; display: grid; gap: 8px; }
+.empty kbd, .kbd { font-family: var(--f-mono); font-size: 11.5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; background: var(--bg); }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > label, .field > .lbl { font-size: 12px; color: var(--muted); }
+select, input[type="text"], input[type="number"], textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; width: 100%; min-width: 0; }
+input[type="number"] { font-family: var(--f-mono); }
+.desc { font-size: 12.5px; color: var(--muted); }
+.params { display: grid; gap: 8px; }
+.chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 6px 10px; text-align: left; }
+.chip .big { font-weight: 700; font-size: 16px; }
+.chip code { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.chip[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.stack { display: grid; gap: 6px; }
+.row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.across { display: grid; gap: 2px; font-size: 12px; }
+.across button { display: grid; grid-template-columns: 1.6em 1fr; gap: 6px; text-align: left; border: 0; background: transparent; padding: 2px 4px; border-radius: 5px; }
+.across button:hover { background: var(--bg); }
+.across button[aria-current="true"] { background: var(--accent-soft); }
+.across code { font-family: var(--f-mono); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.across .n { font-family: var(--f-mono); color: var(--muted); }
+
+/* palette */
+.palette { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); padding: 10px; display: grid; gap: 8px; }
+.palette .groups { max-height: 300px; overflow-y: auto; display: grid; gap: 8px; padding-right: 2px; }
+.palette .g h3 { font-size: 11px; color: var(--muted); margin: 0 0 4px; font-weight: 600; letter-spacing: .04em; }
+.palette .keys { display: flex; flex-wrap: wrap; gap: 4px; }
+.palette .keys button { min-width: 2.2em; border: 1px solid var(--key-edge); border-bottom-width: 2px; background: var(--key); border-radius: 6px; padding: 1px 6px; font-size: 12.5px; }
+.palette .keys button[aria-pressed="true"] { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+.modt { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--muted); }
+.modt button { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 1px 8px; font-size: 13px; }
+.modt button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.capture[aria-pressed="true"] { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+
+/* drawers */
+.drawer { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
+.dtabs { display: flex; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.dtabs button { border: 0; background: transparent; padding: 7px 12px; border-bottom: 2px solid transparent; color: var(--muted); font-size: 13.5px; margin-bottom: -1px; }
+.dtabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.dtabs .count { font-family: var(--f-mono); font-size: 11px; background: var(--sunk); border-radius: 999px; padding: 0 6px; margin-left: 4px; }
+.dtabs .count.warn { background: var(--warn-bg); color: var(--warn); }
+.dtabs .count.err { background: var(--err-bg); color: var(--err); }
+.dbody { padding: 14px; display: grid; gap: 12px; min-width: 0; }
+
+.issues { display: grid; gap: 8px; }
+.issue { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.issue .sev { font-family: var(--f-mono); font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; }
+.issue.warn .sev { background: var(--warn-bg); color: var(--warn); }
+.issue.err .sev { background: var(--err-bg); color: var(--err); }
+.issue.info .sev { background: var(--sunk); color: var(--muted); }
+.issue p { margin: 0; }
+.issue p + p { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.issue .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 640px) { .issue { grid-template-columns: auto minmax(0, 1fr); } .issue .acts { grid-column: 1 / -1; justify-content: flex-start; } }
+.allgood { color: var(--ok); font-weight: 600; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 12px; }
+.card { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); padding: 12px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.card header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card header .kind { font-family: var(--f-mono); font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 7px; }
+.card header .ref { font-family: var(--f-mono); font-weight: 600; font-size: 15px; }
+.card header .use { margin-left: auto; font-size: 12px; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 480px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+.check { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+.poslist { font-family: var(--f-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.tdstep { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.tdstep .n { font-family: var(--f-mono); font-size: 12px; color: var(--muted); padding-top: 7px; }
+.addrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.hint { font-size: 12.5px; color: var(--muted); max-width: 70ch; }
+.hint code, .issue code, .desc code { font-family: var(--f-mono); font-size: .92em; background: var(--sunk); padding: 0 4px; border-radius: 4px; }
+
+.out { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
+@media (max-width: 900px) { .out { grid-template-columns: minmax(0, 1fr); } }
+pre.code { margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px; font-family: var(--f-mono); font-size: 12px; line-height: 1.5; overflow: auto; max-height: 560px; min-width: 0; }
+ol.steps { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; font-size: 13px; }
+
+/* overlay */
+.overlay { position: fixed; inset: 0; background: rgb(10 12 16 / .45); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: min(760px, 100%); max-height: 90vh; overflow: auto; padding: 18px; display: grid; gap: 12px; }
+.modal h2 { margin: 0; font-family: var(--f-display); font-size: 18px; }
+.modal textarea { font-family: var(--f-mono); font-size: 12px; min-height: 280px; }
+.err-text { color: var(--err); font-size: 13px; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: 13px; z-index: 60; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app" id="app">
+  <div class="top">
+    <div class="brand"><h1>torabo-tsuki keymapper</h1><small>torabo-tsuki LP 用 ZMK キーマップ</small></div>
+    <div class="seg" id="layoutSeg" role="group" aria-label="物理レイアウト"></div>
+    <div class="tools">
+      <button class="btn ghost" id="undoBtn" title="元に戻す (⌘Z)">↶ 戻す</button>
+      <button class="btn ghost" id="redoBtn" title="やり直す (⇧⌘Z)">↷ やり直す</button>
+      <button class="btn" id="importBtn">.keymap を読み込む</button>
+      <button class="btn primary" id="exportBtn">.keymap を書き出す</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <section class="plate" aria-label="キーボード">
+      <div class="layers" id="layers"></div>
+      <div class="boardwrap" id="boardwrap"><div class="board" id="board"></div></div>
+      <div id="pickbar"></div>
+      <div class="legend">
+        <span><i></i>カスタム hold-tap</span>
+        <span><i class="std"></i>標準 <code>&amp;mt</code>（速打ちで誤爆しやすい）</span>
+        <span>ドラッグでキー入れ替え ・ 選択中に <span class="kbd">⌫</span> で &amp;trans ・ <span class="kbd">⌘C</span>/<span class="kbd">⌘V</span> でコピー</span>
+      </div>
+    </section>
+    <aside class="insp" id="insp" aria-label="キーの設定"></aside>
+  </div>
+
+  <section class="drawer">
+    <div class="dtabs" role="tablist" id="dtabs"></div>
+    <div class="dbody" id="dbody"></div>
+  </section>
+</div>
+<div id="overlayRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/*KC*/
+const LAYOUTS = /*LAYOUTS*/;
+const INITIAL = /*INITIAL*/;
+</script>
+<script>
+"use strict";
+const STORE_KEY = 'tsuki-keymap-bench-v1';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'style' && typeof v === 'object') { for (const [sk, sv] of Object.entries(v)) { if (sk.startsWith('--')) el.style.setProperty(sk, sv); else el.style[sk] = sv; } }
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c instanceof Node ? c : document.createTextNode(c));
+  return el;
+}
+
+/* ---------- geometry ---------- */
+const THUMBS = new Set([56, 57, 58, 59, 60, 61]);
+const LEFT = (() => {
+  const k = LAYOUTS.L, cx = k.map(a => a[2] + a[0] / 2);
+  const mid = (Math.min(...cx) + Math.max(...cx)) / 2;
+  return cx.map(x => x < mid);
+})();
+function layoutKeys(name) {
+  const keys = LAYOUTS[name];
+  const out = [];
+  if (name === 'L') keys.forEach((k, i) => out.push({ pos: i, k }));
+  else LAYOUTS[name + 'map'].forEach((li, pos) => { if (li < keys.length) out.push({ pos, k: keys[li] }); });
+  return out;
+}
+const presentSet = name => new Set(layoutKeys(name).map(o => o.pos));
+// ZMK compares combo / hold-trigger positions against the *selected* physical layout's numbering,
+// while the keymap itself stays in the stock (L) numbering. Convert on export / import.
+const toRuntime = (p, lay) => { if (lay === 'L') return p; const li = LAYOUTS[lay + 'map'][p]; return li < LAYOUTS[lay].length ? li : null; };
+const fromRuntime = (n, lay) => { if (lay === 'L') return n; const i = LAYOUTS[lay + 'map'].indexOf(n); return i < 0 ? null : i; };
+const posOut = (arr) => arr.map(p => toRuntime(p, S.layout)).filter(x => x != null);
+const HOME_ROW = new Set([24, 25, 26, 27, 28, 29, 32, 33, 34, 35, 36, 37]);
+
+/* ---------- behaviors ---------- */
+const BUILTIN = {
+  kp: { name: 'キー', params: ['key'], desc: 'タップでキーを送る。' },
+  mt: { name: 'Mod-Tap（標準 &mt）', params: ['mod', 'key'], ht: true, desc: 'タップでキー、ホールドで修飾。標準設定は hold-preferred / 200ms なので、速く打つと修飾として判定されやすい。' },
+  lt: { name: 'Layer-Tap（&lt）', params: ['layer', 'key'], ht: true, desc: 'タップでキー、ホールドでレイヤー。標準は tap-preferred / 200ms。' },
+  mo: { name: '押してる間レイヤー（&mo）', params: ['layer'], desc: '押している間だけレイヤーを有効化。' },
+  to: { name: 'レイヤーへ移動（&to）', params: ['layer'], desc: 'そのレイヤーだけを有効にする。' },
+  tog: { name: 'レイヤー切替（&tog）', params: ['layer'], desc: 'レイヤーのオン/オフを切り替える。' },
+  sl: { name: 'ワンショットレイヤー（&sl）', params: ['layer'], desc: '次の1打だけレイヤーを有効化。' },
+  sk: { name: 'ワンショット修飾（&sk）', params: ['mod'], desc: '次の1打だけ修飾キーを効かせる。' },
+  trans: { name: '透過（&trans）', params: [], desc: '下のレイヤーの割り当てをそのまま使う。' },
+  none: { name: '無効（&none）', params: [], desc: '何もしない。下のレイヤーも通さない。' },
+  mkp: { name: 'マウスボタン（&mkp）', params: ['mouse'], desc: 'マウスのクリック。' },
+  mmv: { name: 'マウス移動（&mmv）', params: ['raw'], desc: 'MOVE_UP などを指定。' },
+  msc: { name: 'スクロール（&msc）', params: ['raw'], desc: 'SCRL_UP などを指定。' },
+  bt: { name: 'Bluetooth（&bt）', params: ['bt'], desc: 'BLEプロファイルの切替や削除。' },
+  out: { name: '出力先（&out）', params: ['out'], desc: 'USB / BLE の出力先切替。' },
+  caps_word: { name: 'Caps Word', params: [], desc: '次の単語だけ大文字。' },
+  key_repeat: { name: 'キーリピート', params: [], desc: '直前のキーをもう一度送る。' },
+  gresc: { name: 'Grave/Escape', params: [], desc: 'Esc。⇧や⌘と一緒なら `。' },
+  studio_unlock: { name: 'Studio ロック解除', params: [], desc: 'ZMK Studio の接続ロックを解除する。' },
+  bootloader: { name: 'ブートローダー', params: [], desc: '書き込みモードに入る。' },
+  sys_reset: { name: '再起動', params: [], desc: 'キーボードを再起動。' },
+};
+const FLAVORS = [['hold-preferred', 'hold-preferred（すぐホールド）'], ['balanced', 'balanced（ホームロウ向き）'], ['tap-preferred', 'tap-preferred（タップ優先）'], ['tap-unless-interrupted', 'tap-unless-interrupted']];
+const MOUSE = [['LCLK', '左クリック'], ['RCLK', '右クリック'], ['MCLK', '中クリック'], ['MB4', '戻る'], ['MB5', '進む']];
+const BT = ['BT_CLR', 'BT_NXT', 'BT_PRV', 'BT_SEL 0', 'BT_SEL 1', 'BT_SEL 2', 'BT_SEL 3', 'BT_SEL 4', 'BT_CLR_ALL', 'BT_DISC 0', 'BT_DISC 1', 'BT_DISC 2'];
+const BT_LBL = { BT_CLR: 'BT消去', BT_NXT: 'BT次', BT_PRV: 'BT前', BT_CLR_ALL: 'BT全消去' };
+const OUT = [['OUT_TOG', '切替'], ['OUT_USB', 'USB'], ['OUT_BLE', 'BLE']];
+
+let S, ui = { layer: 0, sel: null, tab: 'check', pick: null, palette: null, clip: null, showPos: true, capture: null, editLayer: null, modal: null };
+let hist = [], fut = [], lastSnap = '';
+
+const custom = label => S.behaviors.find(b => b.label === label);
+function spec(beh) {
+  if (BUILTIN[beh]) return BUILTIN[beh];
+  const b = custom(beh);
+  if (!b) return { name: '&' + beh + '（未定義）', params: [], undefined: true, desc: 'このbehaviorは定義されていない。' };
+  if (b.type === 'hold-tap') {
+    const k0 = (b.bindings[0] || '&kp').replace('&', ''), k1 = (b.bindings[1] || '&kp').replace('&', '');
+    const kind = x => x === 'kp' ? 'key' : (['mo', 'to', 'tog', 'sl'].includes(x) ? 'layer' : 'raw');
+    const p0 = kind(k0) === 'key' ? 'mod' : kind(k0);
+    return { name: (b.displayName || b.label) + '（&' + b.label + '）', params: [p0, kind(k1)], ht: true, custom: b,
+      desc: `カスタム hold-tap：${b.flavor || 'hold-preferred'} / ${b.tappingTerm || 200}ms` + (b.holdTriggerPositions.length ? ` / 反対側の手でホールド判定（${b.holdTriggerPositions.length}キー）` : '') };
+  }
+  if (b.type === 'tap-dance') return { name: (b.displayName || b.label) + '（&' + b.label + '）', params: [], custom: b, td: true,
+    desc: 'タップ回数で動作が変わる：' + b.bindings.map((x, i) => `${i + 1}回=${bindingText(x)}`).join('、') };
+  return { name: (b.displayName || b.label) + '（&' + b.label + '）', params: Array(b.cells || 0).fill('raw'), custom: b, desc: '自由記述のbehavior。' };
+}
+
+/* ---------- parsing ---------- */
+function stripComments(s) {
+  let o = '', i = 0, q = null;
+  while (i < s.length) {
+    const c = s[i], n = s[i + 1];
+    if (q) { o += c; if (c === '\\') { o += n || ''; i += 2; continue; } if (c === q) q = null; i++; continue; }
+    if (c === '"') { q = c; o += c; i++; continue; }
+    if (c === '/' && n === '/') { while (i < s.length && s[i] !== '\n') i++; continue; }
+    if (c === '/' && n === '*') { const e = s.indexOf('*/', i + 2); i = e < 0 ? s.length : e + 2; o += ' '; continue; }
+    o += c; i++;
+  }
+  return o;
+}
+function matchBrace(s, i) { // s[i] === '{'
+  let d = 0, q = false;
+  for (let j = i; j < s.length; j++) {
+    const c = s[j];
+    if (q) { if (c === '\\') j++; else if (c === '"') q = false; continue; }
+    if (c === '"') q = true; else if (c === '{') d++; else if (c === '}') { d--; if (d === 0) return j; }
+  }
+  throw new Error('波括弧 { } の対応が取れない');
+}
+function parseBody(body) {
+  const props = [], children = [];
+  let i = 0;
+  while (i < body.length) {
+    while (i < body.length && /\s|;/.test(body[i])) i++;
+    if (i >= body.length) break;
+    let j = i, q = false;
+    while (j < body.length) { const c = body[j]; if (q) { if (c === '"') q = false; } else if (c === '"') q = true; else if ('{;='.includes(c)) break; j++; }
+    const head = body.slice(i, j).trim(), c = body[j];
+    if (c === '=') {
+      let k = j + 1; q = false;
+      while (k < body.length) { const d = body[k]; if (q) { if (d === '"') q = false; } else if (d === '"') q = true; else if (d === ';') break; k++; }
+      props.push([head, body.slice(j + 1, k).trim()]); i = k + 1;
+    } else if (c === '{') {
+      const e = matchBrace(body, j);
+      const m = /^(?:([\w-]+)\s*:\s*)?([\w@,.+-]+)$/.exec(head) || [null, null, head];
+      children.push({ label: m[1] || null, name: m[2], body: body.slice(j + 1, e), raw: body.slice(i, e + 1) + ';' });
+      i = e + 1;
+    } else { if (head) props.push([head, true]); i = j + 1; }
+  }
+  return { props, children };
+}
+const prop = (n, k) => { const p = n.props.find(x => x[0] === k); return p ? p[1] : undefined; };
+const unq = v => typeof v === 'string' ? v.replace(/^"|"$/g, '') : v;
+const cells = v => (v || '').replace(/[<>]/g, ' ').split(/[\s,]+/).filter(Boolean);
+function splitTokens(s) {
+  const out = []; let cur = '', d = 0;
+  for (const ch of s) { if (ch === '(') d++; if (ch === ')') d--; if (/[\s,]/.test(ch) && d === 0) { if (cur) { out.push(cur); cur = ''; } } else cur += ch; }
+  if (cur) out.push(cur); return out;
+}
+function parseBindings(v) {
+  const inner = [...String(v || '').matchAll(/<([^>]*)>/g)].map(m => m[1]).join(' ');
+  const out = [];
+  for (const t of splitTokens(inner)) { if (t.startsWith('&')) out.push({ beh: t.slice(1), params: [] }); else if (out.length) out[out.length - 1].params.push(t); }
+  for (const b of out) if (b.beh === 'bt' && b.params.length > 1) b.params = [b.params.join(' ')];
+  return out;
+}
+const bindingText = b => '&' + b.beh + (b.params.length ? ' ' + b.params.join(' ') : '');
+
+function parseKeymap(text) {
+  const mk = /tsuki-keymap-bench: combo \/ hold-trigger positions use the ([SML]) layout numbering/.exec(text);
+  const posLay = mk ? mk[1] : 'L';
+  const src = stripComments(text);
+  const includes = [], preamble = [];
+  const lines = src.split('\n'), rest = [];
+  for (let i = 0; i < lines.length; i++) {
+    let l = lines[i];
+    if (/^\s*#\s*(include|define|undef|ifn?def|if|else|elif|endif|pragma)\b/.test(l)) {
+      while (/\\\s*$/.test(l) && i + 1 < lines.length) l += '\n' + lines[++i];
+      if (/^\s*#\s*include/.test(l)) includes.push(l.trim()); else preamble.push(l.trim());
+    } else rest.push(l);
+  }
+  const s = rest.join('\n');
+  const roots = [], tail = [];
+  let i = 0;
+  while (i < s.length) {
+    while (i < s.length && /\s|;/.test(s[i])) i++;
+    if (i >= s.length) break;
+    const b = s.indexOf('{', i);
+    if (b < 0) { tail.push(s.slice(i).trim()); break; }
+    const head = s.slice(i, b).trim(), e = matchBrace(s, b);
+    if (head === '/') roots.push(s.slice(b + 1, e)); else tail.push(s.slice(i, e + 1) + ';');
+    i = e + 1;
+  }
+  if (!roots.length) throw new Error('ルートノード "/ { ... };" が見つからない');
+  const st = { layout: (S && S.layout) || 'S', layers: [], behaviors: [], combos: [], includes, preamble, rootRaw: [], tailRaw: tail.filter(Boolean) };
+  for (const r of roots) {
+    const root = parseBody(r);
+    for (const c of root.children) {
+      const node = parseBody(c.body);
+      const comp = unq(prop(node, 'compatible'));
+      if (comp === 'zmk,keymap') {
+        for (const L of node.children) {
+          const ln = parseBody(L.body);
+          const extra = ln.props.filter(p => !['bindings', 'display-name', 'label'].includes(p[0]));
+          st.layers.push({ name: unq(prop(ln, 'display-name') || prop(ln, 'label')) || L.name, node: L.name, bindings: parseBindings(prop(ln, 'bindings')), extra });
+        }
+      } else if (comp === 'zmk,combos') {
+        for (const C of node.children) {
+          const cn = parseBody(C.body);
+          st.combos.push({ name: C.name, positions: cells(prop(cn, 'key-positions')).map(Number).map(n => fromRuntime(n, posLay)).filter(x => x != null), binding: parseBindings(prop(cn, 'bindings'))[0] || { beh: 'none', params: [] },
+            layers: cells(prop(cn, 'layers')).map(Number), timeout: Number(cells(prop(cn, 'timeout-ms'))[0]) || null,
+            extra: cn.props.filter(p => !['key-positions', 'bindings', 'layers', 'timeout-ms'].includes(p[0])) });
+        }
+      } else if (node.children.length && node.children.some(x => prop(parseBody(x.body), 'compatible'))) {
+        for (const B of node.children) st.behaviors.push(parseBehavior(B, posLay));
+      } else if (comp && comp.startsWith('zmk,behavior')) {
+        st.behaviors.push(parseBehavior(c, posLay));
+      } else st.rootRaw.push(c.raw);
+    }
+  }
+  if (!st.layers.length) throw new Error('keymap ノード（compatible = "zmk,keymap"）が見つからない');
+  return st;
+}
+function parseBehavior(B, posLay = 'L') {
+  const n = parseBody(B.body), comp = unq(prop(n, 'compatible'));
+  const label = B.label || B.name.replace(/[^\w]/g, '_');
+  const known = ['compatible', 'display-name', 'label', '#binding-cells', 'bindings', 'tapping-term-ms'];
+  if (comp === 'zmk,behavior-hold-tap') {
+    const k = [...known, 'flavor', 'quick-tap-ms', 'require-prior-idle-ms', 'global-quick-tap-ms', 'hold-trigger-key-positions', 'hold-trigger-on-release', 'retro-tap'];
+    return { type: 'hold-tap', label, node: B.name, displayName: unq(prop(n, 'display-name') || prop(n, 'label')) || '',
+      flavor: unq(prop(n, 'flavor')) || 'hold-preferred', tappingTerm: num(prop(n, 'tapping-term-ms')) ?? 200,
+      quickTap: num(prop(n, 'quick-tap-ms')), priorIdle: num(prop(n, 'require-prior-idle-ms') ?? prop(n, 'global-quick-tap-ms')),
+      holdTriggerPositions: cells(prop(n, 'hold-trigger-key-positions')).map(Number).map(x => fromRuntime(x, posLay)).filter(x => x != null), onRelease: prop(n, 'hold-trigger-on-release') === true,
+      retroTap: prop(n, 'retro-tap') === true, bindings: [...String(prop(n, 'bindings') || '<&kp>, <&kp>').matchAll(/<\s*(&\w+)\s*>/g)].map(m => m[1]),
+      extra: n.props.filter(p => !k.includes(p[0])) };
+  }
+  if (comp === 'zmk,behavior-tap-dance') {
+    return { type: 'tap-dance', label, node: B.name, displayName: unq(prop(n, 'display-name') || prop(n, 'label')) || '',
+      tappingTerm: num(prop(n, 'tapping-term-ms')) ?? 200, bindings: parseBindings(prop(n, 'bindings')), extra: n.props.filter(p => !known.includes(p[0])) };
+  }
+  return { type: 'raw', label, node: B.name, displayName: unq(prop(n, 'display-name')) || '', cells: Number(cells(prop(n, '#binding-cells'))[0]) || 0, raw: B.raw.trim() };
+}
+const num = v => { const c = cells(v)[0]; return c == null ? null : Number(c); };
+
+/* ---------- generating ---------- */
+const IND = n => ' '.repeat(n);
+function reindent(text, n) {
+  const ls = String(text).replace(/\s+$/, '').split('\n');
+  const last = ls[ls.length - 1];
+  const base = ls.length > 1 && /^\s*\};?\s*$/.test(last) ? last.match(/^ */)[0].length : 0;
+  return ls.map((l, i) => i === 0 ? IND(n) + l.trim() : IND(n) + l.slice(Math.min(base, l.match(/^ */)[0].length))).join('\n');
+}
+function fmtRows(strs, base) {
+  const pad = IND(base);
+  if (strs.length !== 66) {
+    const rows = []; for (let i = 0; i < strs.length; i += 12) rows.push(strs.slice(i, i + 12));
+    const w = []; rows.forEach(r => r.forEach((s, c) => w[c] = Math.max(w[c] || 0, s.length)));
+    return rows.map(r => pad + r.map((s, c) => s.padEnd(w[c])).join('  ').trimEnd()).join('\n');
+  }
+  const shape = [12, 12, 14, 14, 14];
+  const rows = []; let o = 0;
+  for (const n of shape) {
+    const r = strs.slice(o, o + n); o += n;
+    rows.push(n === 12 ? [...r.slice(0, 6), null, null, ...r.slice(6)] : r);
+  }
+  const w = Array(14).fill(0);
+  rows.forEach(r => r.forEach((s, c) => { if (s) w[c] = Math.max(w[c], s.length); }));
+  return rows.map(r => pad + r.map((s, c) => (s || '').padEnd(w[c])).join('  ').trimEnd()).join('\n');
+}
+function nodeName(s, used) {
+  let n = String(s).toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '') || 'node';
+  if (/^\d/.test(n)) n = 'n_' + n;
+  let k = n, i = 2; while (used.has(k)) k = n + '_' + i++;
+  used.add(k); return k;
+}
+function usesBeh(pred) {
+  const all = [...S.layers.flatMap(l => l.bindings), ...S.combos.map(c => c.binding), ...S.behaviors.filter(b => b.type === 'tap-dance').flatMap(b => b.bindings)];
+  return all.some(pred);
+}
+function generate() {
+  const out = [];
+  const inc = [...S.includes];
+  const need = ['#include <behaviors.dtsi>', '#include <dt-bindings/zmk/keys.h>'];
+  if (usesBeh(b => b.beh === 'bt')) need.push('#include <dt-bindings/zmk/bt.h>');
+  if (usesBeh(b => b.beh === 'out')) need.push('#include <dt-bindings/zmk/outputs.h>');
+  if (usesBeh(b => ['mkp', 'mmv', 'msc'].includes(b.beh)) && !inc.some(x => /pointing\.h|mouse\.h/.test(x))) need.push('#include <dt-bindings/zmk/pointing.h>');
+  for (const n of need) if (!inc.some(x => x.replace(/\s+/g, ' ') === n)) inc.push(n);
+  out.push(`// tsuki-keymap-bench: combo / hold-trigger positions use the ${S.layout} layout numbering`);
+  out.push(...inc);
+  if (S.preamble.length) out.push('', ...S.preamble);
+  out.push('', '/ {');
+  const used = new Set();
+  if (S.behaviors.length) {
+    out.push(IND(4) + 'behaviors {');
+    S.behaviors.forEach((b, bi) => {
+      if (bi) out.push('');
+      if (b.type === 'raw') { out.push(reindent(b.raw, 8)); return; }
+      const nn = nodeName(b.node || b.label, used);
+      const L = [`${b.label}: ${nn} {`];
+      if (b.type === 'hold-tap') {
+        L.push('    compatible = "zmk,behavior-hold-tap";');
+        L.push(`    display-name = "${(b.displayName || b.label).replace(/"/g, "'")}";`);
+        L.push('    #binding-cells = <2>;');
+        L.push(`    flavor = "${b.flavor}";`);
+        L.push(`    tapping-term-ms = <${b.tappingTerm}>;`);
+        if (b.quickTap != null && b.quickTap !== '') L.push(`    quick-tap-ms = <${b.quickTap}>;`);
+        if (b.priorIdle != null && b.priorIdle !== '') L.push(`    require-prior-idle-ms = <${b.priorIdle}>;`);
+        if (posOut(b.holdTriggerPositions).length) L.push(`    hold-trigger-key-positions = <${posOut(b.holdTriggerPositions).join(' ')}>;`);
+        if (b.onRelease) L.push('    hold-trigger-on-release;');
+        if (b.retroTap) L.push('    retro-tap;');
+        for (const [k, v] of b.extra || []) L.push(v === true ? `    ${k};` : `    ${k} = ${v};`);
+        L.push(`    bindings = ${b.bindings.map(x => '<' + x + '>').join(', ')};`);
+      } else {
+        L.push('    compatible = "zmk,behavior-tap-dance";');
+        L.push(`    display-name = "${(b.displayName || b.label).replace(/"/g, "'")}";`);
+        L.push('    #binding-cells = <0>;');
+        L.push(`    tapping-term-ms = <${b.tappingTerm}>;`);
+        for (const [k, v] of b.extra || []) L.push(v === true ? `    ${k};` : `    ${k} = ${v};`);
+        L.push(`    bindings = ${b.bindings.map(x => '<' + bindingText(x) + '>').join(', ')};`);
+      }
+      L.push('};');
+      out.push(L.map(l => IND(8) + l).join('\n'));
+    });
+    out.push(IND(4) + '};', '');
+  }
+  for (const r of S.rootRaw) out.push(reindent(r, 4), '');
+  if (S.combos.length) {
+    const cu = new Set();
+    out.push(IND(4) + 'combos {', IND(8) + 'compatible = "zmk,combos";', '');
+    S.combos.forEach(c => {
+      out.push(IND(8) + nodeName(c.name, cu) + ' {');
+      if (c.timeout) out.push(IND(12) + `timeout-ms = <${c.timeout}>;`);
+      out.push(IND(12) + `key-positions = <${posOut(c.positions).join(' ')}>;`);
+      out.push(IND(12) + `bindings = <${bindingText(c.binding)}>;`);
+      if (c.layers.length) out.push(IND(12) + `layers = <${c.layers.join(' ')}>;`);
+      for (const [k, v] of c.extra || []) out.push(IND(12) + (v === true ? `${k};` : `${k} = ${v};`));
+      out.push(IND(8) + '};', '');
+    });
+    out.push(IND(4) + '};', '');
+  }
+  out.push(IND(4) + 'keymap {', IND(8) + 'compatible = "zmk,keymap";', '');
+  const lu = new Set();
+  S.layers.forEach((l, i) => {
+    out.push(IND(8) + nodeName(l.node || l.name || 'layer_' + i, lu) + ' {');
+    out.push(IND(12) + `display-name = "${String(l.name).replace(/"/g, "'")}";`);
+    for (const [k, v] of l.extra || []) out.push(IND(12) + (v === true ? `${k};` : `${k} = ${v};`));
+    out.push(IND(12) + 'bindings = <');
+    out.push(fmtRows(l.bindings.map(bindingText), 0));
+    out.push(IND(12) + '>;', IND(8) + '};', '');
+  });
+  out.push(IND(4) + '};', '};');
+  if (S.tailRaw.length) out.push('', ...S.tailRaw);
+  return out.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+}
+
+/* ---------- state ---------- */
+function load() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) {}
+  if (saved && saved.layers) S = saved;
+  else { S = null; S = parseKeymap(INITIAL); S.layout = 'S'; }
+  lastSnap = JSON.stringify(S);
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
+function commit() {
+  hist.push(lastSnap); if (hist.length > 100) hist.shift();
+  fut = []; lastSnap = JSON.stringify(S); save(); render();
+}
+function undo() { if (!hist.length) return; fut.push(lastSnap); lastSnap = hist.pop(); S = JSON.parse(lastSnap); clampUi(); save(); render(); toast('元に戻した'); }
+function redo() { if (!fut.length) return; hist.push(lastSnap); lastSnap = fut.pop(); S = JSON.parse(lastSnap); clampUi(); save(); render(); }
+function clampUi() { if (ui.layer >= S.layers.length) ui.layer = 0; if (ui.pick && ui.pick.kind === 'ht' && !custom(ui.pick.label)) ui.pick = null; if (ui.pick && ui.pick.kind === 'combo' && !S.combos[ui.pick.i]) ui.pick = null; }
+let toastT;
+function toast(msg) { const r = $('#toastRoot'); r.innerHTML = ''; r.append(h('div', { class: 'toast', role: 'status' }, msg)); clearTimeout(toastT); toastT = setTimeout(() => r.innerHTML = '', 2400); }
+
+/* ---------- faces ---------- */
+const layerName = i => (S.layers[i] ? S.layers[i].name : 'L' + i);
+const layerHue = i => [250, 150, 25, 300, 75, 200, 340, 110][i % 8];
+function face(b) {
+  const sp = spec(b.beh), p = b.params;
+  const f = { tap: '', hold: '', cls: [], holdLayer: null };
+  switch (b.beh) {
+    case 'kp': f.tap = kcLabel(p[0]); break;
+    case 'mt': f.tap = kcLabel(p[1]); f.hold = kcLabel(p[0]); f.cls.push('ht', 'std'); break;
+    case 'lt': f.tap = kcLabel(p[1]); f.hold = layerName(+p[0]); f.holdLayer = +p[0]; f.cls.push('ht'); break;
+    case 'mo': case 'to': case 'tog': case 'sl': f.tap = layerName(+p[0]); f.hold = { mo: 'MO', to: 'TO', tog: 'TOG', sl: 'SL' }[b.beh]; f.holdLayer = +p[0]; f.cls.push('lay'); break;
+    case 'sk': f.tap = kcLabel(p[0]); f.hold = 'sticky'; break;
+    case 'trans': f.cls.push('trans'); break;
+    case 'none': f.tap = '✕'; break;
+    case 'mkp': f.tap = ({ LCLK: '左', RCLK: '右', MCLK: '中', MB4: '戻る', MB5: '進む' })[p[0]] || p[0]; f.hold = 'click'; break;
+    case 'bt': f.tap = BT_LBL[p[0]] || (p[0] || '').replace('BT_SEL ', 'BT') .replace('BT_DISC ', 'BT切断'); break;
+    case 'out': f.tap = (OUT.find(o => o[0] === p[0]) || [0, p[0]])[1]; f.hold = 'OUT'; break;
+    case 'caps_word': f.tap = 'CapsW'; break;
+    case 'key_repeat': f.tap = 'Rep'; break;
+    case 'gresc': f.tap = 'Esc`'; break;
+    case 'studio_unlock': f.tap = 'Studio'; f.hold = 'unlock'; break;
+    case 'bootloader': f.tap = 'Boot'; break;
+    case 'sys_reset': f.tap = 'Reset'; break;
+    default:
+      if (sp.custom && sp.custom.type === 'hold-tap') {
+        const isLayer = sp.params[0] === 'layer';
+        f.tap = sp.params[1] === 'key' ? kcLabel(p[1]) : (p[1] || '');
+        f.hold = isLayer ? layerName(+p[0]) : kcLabel(p[0]); if (isLayer) f.holdLayer = +p[0];
+        f.cls.push('ht');
+      } else if (sp.custom && sp.custom.type === 'tap-dance') {
+        f.tap = sp.custom.bindings.map(x => face(x).tap || '·').join(' '); f.hold = 'TD×' + sp.custom.bindings.length;
+      } else { f.tap = '&' + b.beh; f.hold = p.join(' '); }
+  }
+  return f;
+}
+
+/* ---------- render: header & layers ---------- */
+function renderTop() {
+  const seg = $('#layoutSeg'); seg.innerHTML = '';
+  [['S', 'S（44キー）'], ['M', 'M（52）'], ['L', 'L（66）']].forEach(([k, l]) =>
+    seg.append(h('button', { 'aria-pressed': String(S.layout === k), onclick: () => { S.layout = k; commit(); } }, l)));
+  $('#undoBtn').disabled = !hist.length; $('#redoBtn').disabled = !fut.length;
+}
+function renderLayers() {
+  const el = $('#layers'); el.innerHTML = '';
+  S.layers.forEach((l, i) => {
+    const tab = h('button', { class: 'ltab', role: 'tab', 'aria-selected': String(i === ui.layer), style: { '--h': layerHue(i) },
+      title: 'ダブルクリックで名前を変更',
+      onclick: () => { ui.layer = i; render(); }, ondblclick: () => { ui.editLayer = i; render(); } },
+      h('span', { class: 'dot' }), h('span', { class: 'idx' }, i));
+    if (ui.editLayer === i) {
+      const inp = h('input', { type: 'text', id: 'layerNameInput', value: l.name, 'aria-label': 'レイヤー名',
+        onkeydown: e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { ui.editLayer = null; render(); } },
+        onblur: () => { const v = inp.value.trim(); ui.editLayer = null; if (v && v !== l.name) { l.name = v; commit(); } else render(); } });
+      tab.append(inp); setTimeout(() => { inp.focus(); inp.select(); });
+    } else tab.append(l.name);
+    el.append(tab);
+  });
+  el.append(h('div', { class: 'layer-tools' },
+    h('button', { class: 'btn ghost sm', title: 'レイヤーを左へ', disabled: ui.layer === 0, onclick: () => moveLayer(ui.layer, -1) }, '←'),
+    h('button', { class: 'btn ghost sm', title: 'レイヤーを右へ', disabled: ui.layer === S.layers.length - 1, onclick: () => moveLayer(ui.layer, 1) }, '→'),
+    h('button', { class: 'btn ghost sm', onclick: () => { ui.editLayer = ui.layer; render(); } }, '名前変更'),
+    h('button', { class: 'btn ghost sm', onclick: addLayer }, '+ レイヤー'),
+    h('button', { class: 'btn ghost sm', disabled: S.layers.length < 2, onclick: delLayer }, '削除'),
+    h('button', { class: 'btn ghost sm', 'aria-pressed': String(ui.showPos), onclick: () => { ui.showPos = !ui.showPos; render(); } }, ui.showPos ? '番号を隠す' : '番号を表示')));
+}
+function remapLayers(fn) { // fn(oldIndex) -> newIndex or null
+  const fix = b => {
+    const sp = spec(b.beh);
+    sp.params.forEach((k, i) => { if (k === 'layer') { const n = fn(+b.params[i]); b.params[i] = String(n == null ? 0 : n); } });
+  };
+  S.layers.forEach(l => l.bindings.forEach(fix));
+  S.combos.forEach(c => { fix(c.binding); c.layers = c.layers.map(fn).filter(x => x != null); });
+  S.behaviors.filter(b => b.type === 'tap-dance').forEach(b => b.bindings.forEach(fix));
+}
+function moveLayer(i, d) {
+  const j = i + d; if (j < 0 || j >= S.layers.length) return;
+  remapLayers(x => x === i ? j : x === j ? i : x);
+  [S.layers[i], S.layers[j]] = [S.layers[j], S.layers[i]]; ui.layer = j; commit();
+}
+function addLayer() {
+  const n = S.layers[0].bindings.length;
+  S.layers.push({ name: 'layer_' + S.layers.length, node: '', bindings: Array.from({ length: n }, () => ({ beh: 'trans', params: [] })), extra: [] });
+  ui.layer = S.layers.length - 1; commit(); toast('レイヤーを追加した');
+}
+function delLayer() {
+  const i = ui.layer;
+  const refs = countLayerRefs(i);
+  if (refs && !(ui.confirmDel === i)) { ui.confirmDel = i; toast(`このレイヤーを参照するキーが ${refs} 個ある。もう一度押すと削除（参照はレイヤー0へ）`); return; }
+  ui.confirmDel = null;
+  remapLayers(x => x === i ? null : x > i ? x - 1 : x);
+  S.layers.splice(i, 1); ui.layer = Math.max(0, i - 1); commit(); toast('レイヤーを削除した');
+}
+function countLayerRefs(i) {
+  let n = 0;
+  S.layers.forEach(l => l.bindings.forEach(b => spec(b.beh).params.forEach((k, j) => { if (k === 'layer' && +b.params[j] === i) n++; })));
+  return n;
+}
+
+/* ---------- render: board ---------- */
+let boardW = 0;
+function renderBoard() {
+  const wrap = $('#boardwrap'), board = $('#board');
+  const keys = layoutKeys(S.layout);
+  let maxX = 0, maxY = 0;
+  keys.forEach(({ k }) => { maxX = Math.max(maxX, k[2] + k[0]); maxY = Math.max(maxY, k[3] + k[1] + (k[4] ? 30 : 0)); });
+  const avail = Math.max(wrap.clientWidth - 4, 360);
+  const scale = Math.min(avail / (maxX + 10), 0.72);
+  const u = 100 * scale;
+  board.style.setProperty('--s', u + 'px');
+  board.style.width = (maxX + 10) * scale + 'px';
+  board.style.height = (maxY + 14) * scale + 'px';
+  board.classList.toggle('picking', !!ui.pick);
+  board.innerHTML = '';
+  const layer = S.layers[ui.layer];
+  const picked = pickSet();
+  const gap = 5;
+  keys.forEach(({ pos, k }) => {
+    const [w, hh, x, y, r, rx, ry] = k;
+    const b = layer.bindings[pos] || { beh: 'none', params: [] };
+    const f = face(b);
+    const el = h('div', { class: 'key ' + f.cls.join(' '), 'data-pos': pos, tabindex: '0', role: 'button', draggable: ui.pick ? null : 'true',
+      'aria-label': `位置 ${pos}: ${bindingText(b)}`, title: bindingText(b) });
+    Object.assign(el.style, { left: (x * scale + gap / 2) + 'px', top: (y * scale + gap / 2) + 'px', width: (w * scale - gap) + 'px', height: (hh * scale - gap) + 'px' });
+    if (r) { el.style.transformOrigin = `${(rx - x) * scale - gap / 2}px ${(ry - y) * scale - gap / 2}px`; el.style.transform = `rotate(${r / 100}deg)`; }
+    if (f.holdLayer != null) el.style.setProperty('--h', layerHue(f.holdLayer));
+    if (ui.sel === pos && !ui.pick) el.classList.add('sel');
+    if (picked && picked.has(pos)) el.classList.add('picked');
+    if (ui.pick && ui.pick.kind === 'ht' && b.beh === ui.pick.label) el.classList.add('owner');
+    if (ui.showPos || ui.pick) el.append(h('span', { class: 'pos' }, pos));
+    if (b.beh === 'trans') {
+      const below = resolveBelow(pos, ui.layer);
+      el.append(h('span', { class: 'tr' }, '▽', below ? h('small', {}, face(below).tap) : null));
+    } else {
+      const tl = String(f.tap);
+      el.append(h('span', { class: 'tap' + (tl.length > 7 ? ' xlong' : tl.length > 3 ? ' long' : '') }, tl));
+      if (f.hold) el.append(h('span', { class: 'hold' + (f.holdLayer != null ? ' layer' : '') }, f.hold));
+    }
+    el.addEventListener('pointerdown', e => { if (ui.pick && e.button === 0) { e.preventDefault(); onKeyClick(pos); } });
+    el.addEventListener('click', () => { if (!ui.pick) onKeyClick(pos); });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onKeyClick(pos); } });
+    el.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', String(pos)); e.dataTransfer.effectAllowed = 'move'; });
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drop'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drop'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); const from = +e.dataTransfer.getData('text/plain');
+      if (from === pos || isNaN(from)) return render();
+      const L = S.layers[ui.layer].bindings; [L[from], L[pos]] = [L[pos], L[from]]; ui.sel = pos; commit(); toast(`位置 ${from} と ${pos} を入れ替えた`);
+    });
+    board.append(el);
+  });
+  // pickbar
+  const pb = $('#pickbar'); pb.innerHTML = '';
+  if (ui.pick) {
+    const lbl = ui.pick.kind === 'ht' ? h('span', {}, 'ホールド判定キーを選択中：', h('b', {}, '&' + ui.pick.label), '（青いキーを押すとホールド扱い）')
+      : h('span', {}, 'コンボのキーを選択中（同時押しするキーを全部クリック）：', h('b', { id: 'pickCount' }, S.combos[ui.pick.i].positions.join(' + ') || 'まだ無し'));
+    pb.append(h('div', { class: 'pickbar' }, lbl, h('span', { style: { marginLeft: 'auto' } }),
+      ui.pick.kind === 'ht' ? h('button', { class: 'btn sm', onclick: () => { presetOpposite(custom(ui.pick.label)); commit(); } }, '反対の手＋親指') : null,
+      h('button', { class: 'btn sm', onclick: () => { const s = pickTarget(); s.splice(0, s.length); commit(); } }, '全部外す'),
+      h('button', { class: 'btn sm primary', onclick: () => { ui.pick = null; render(); } }, '完了')));
+  }
+}
+function resolveBelow(pos, li) {
+  for (let i = li - 1; i >= 0; i--) { const b = S.layers[i].bindings[pos]; if (b && b.beh !== 'trans') return b; }
+  return null;
+}
+function pickTarget() {
+  if (!ui.pick) return null;
+  if (ui.pick.kind === 'ht') return custom(ui.pick.label).holdTriggerPositions;
+  return S.combos[ui.pick.i].positions;
+}
+function pickSet() { const t = pickTarget(); return t ? new Set(t) : null; }
+function onKeyClick(pos) {
+  if (ui.pick) {
+    const t = pickTarget(); const i = t.indexOf(pos);
+    if (i >= 0) t.splice(i, 1); else { t.push(pos); t.sort((a, b) => a - b); }
+    hist.push(lastSnap); if (hist.length > 100) hist.shift(); fut = []; lastSnap = JSON.stringify(S); save();
+    const k = document.querySelector(`#board .key[data-pos="${pos}"]`); if (k) k.classList.toggle('picked', i < 0);
+    const c = $('#pickCount'); if (c) c.textContent = t.length ? t.join(' + ') : 'まだ無し';
+    renderTop(); renderDrawer(); return;
+  }
+  ui.sel = ui.sel === pos ? null : pos; ui.palette = null; render();
+}
+function presetOpposite(b) {
+  const owners = new Set();
+  S.layers.forEach(l => l.bindings.forEach((x, p) => { if (x.beh === b.label) owners.add(p); }));
+  let left = [...owners].filter(p => LEFT[p]).length, right = owners.size - left;
+  const isLeft = owners.size ? left >= right : /l(eft)?$/i.test(b.label);
+  const present = presentSet(S.layout);
+  b.holdTriggerPositions = [...present].filter(p => THUMBS.has(p) || LEFT[p] !== isLeft).sort((a, c) => a - c);
+  b.onRelease = true;
+}
+
+/* ---------- binding editor ---------- */
+function behOptions(cur) {
+  const ht = S.behaviors.filter(b => b.type === 'hold-tap').map(b => b.label);
+  const td = S.behaviors.filter(b => b.type === 'tap-dance').map(b => b.label);
+  const raw = S.behaviors.filter(b => b.type === 'raw').map(b => b.label);
+  const groups = [['基本', ['kp', 'trans', 'none']], ['ホールドタップ', ['mt', 'lt', ...ht]], ['レイヤー', ['mo', 'to', 'tog', 'sl']],
+    ['タップダンス', td], ['修飾・便利', ['sk', 'caps_word', 'key_repeat', 'gresc']], ['マウス', ['mkp', 'mmv', 'msc']],
+    ['接続・システム', ['bt', 'out', 'studio_unlock', 'bootloader', 'sys_reset']], ['自由記述', raw]];
+  const all = groups.flatMap(g => g[1]);
+  if (!all.includes(cur)) groups.push(['未定義', [cur]]);
+  return groups.filter(g => g[1].length);
+}
+function defaultParams(kinds, old) {
+  const oldKey = old ? (spec(old.beh).params.map((k, i) => k === 'key' ? old.params[i] : null).filter(Boolean).pop()) : null;
+  return kinds.map(k => ({ key: oldKey || 'A', mod: 'LSHFT', layer: '1', mouse: 'LCLK', bt: 'BT_CLR', out: 'OUT_TOG', raw: '' }[k]));
+}
+function bindingEditor(ctx, get, set) {
+  const b = get(), sp = spec(b.beh);
+  const wrap = h('div', { class: 'stack' });
+  const sel = h('select', { id: 'beh-' + ctx, 'aria-label': 'behavior', onchange: () => {
+    const nb = { beh: sel.value, params: defaultParams(spec(sel.value).params, b) };
+    ui.palette = null; set(nb);
+  } });
+  for (const [g, items] of behOptions(b.beh)) {
+    const og = h('optgroup', { label: g });
+    items.forEach(it => og.append(h('option', { value: it, selected: it === b.beh }, spec(it).name)));
+    sel.append(og);
+  }
+  wrap.append(h('div', { class: 'field' }, h('label', { for: 'beh-' + ctx }, '動作'), sel));
+  const params = h('div', { class: 'params' });
+  const names = sp.ht ? (sp.params[0] === 'layer' ? ['ホールド（レイヤー）', 'タップ'] : ['ホールド（修飾）', 'タップ']) : sp.params.map(() => '');
+  sp.params.forEach((kind, i) => {
+    const id = `p-${ctx}-${i}`, val = b.params[i] ?? '';
+    const upd = v => { const nb = { beh: b.beh, params: [...b.params] }; nb.params[i] = v; set(nb); };
+    let ctl;
+    if (kind === 'key' || kind === 'mod') {
+      const open = ui.palette && ui.palette.ctx === ctx && ui.palette.i === i;
+      ctl = h('button', { class: 'chip', id, 'aria-expanded': String(!!open), onclick: () => { ui.palette = open ? null : { ctx, i, q: '' }; render(); } },
+        h('span', { class: 'big' }, kcLabel(val) || '—'), h('code', {}, val || '未設定'));
+      params.append(h('div', { class: 'field' }, h('span', { class: 'lbl' }, names[i] || (kind === 'mod' ? '修飾キー' : 'キー')), ctl));
+      if (open) params.append(palette(val, kind, upd, b.beh === 'kp' ? (m => { ui.palette = null; set({ beh: 'mkp', params: [m] }); }) : null));
+      return;
+    }
+    if (kind === 'layer') { ctl = h('select', { id, onchange: () => upd(ctl.value) }); S.layers.forEach((l, li) => ctl.append(h('option', { value: li, selected: +val === li }, `${li}: ${l.name}`))); }
+    else if (kind === 'mouse') { ctl = h('select', { id, onchange: () => upd(ctl.value) }); MOUSE.forEach(([v, l]) => ctl.append(h('option', { value: v, selected: v === val }, l + '  ' + v))); }
+    else if (kind === 'bt') { ctl = h('select', { id, onchange: () => upd(ctl.value) }); const list = BT.includes(val) ? BT : [...BT, val]; list.forEach(v => ctl.append(h('option', { value: v, selected: v === val }, v))); }
+    else if (kind === 'out') { ctl = h('select', { id, onchange: () => upd(ctl.value) }); OUT.forEach(([v, l]) => ctl.append(h('option', { value: v, selected: v === val }, `${l}  ${v}`))); }
+    else ctl = h('input', { type: 'text', id, value: val, spellcheck: 'false', onchange: () => upd(ctl.value.trim()) });
+    params.append(h('div', { class: 'field' }, h('label', { for: id }, names[i] || { layer: 'レイヤー', mouse: 'ボタン', bt: 'コマンド', out: '出力先', raw: '引数' }[kind]), ctl));
+  });
+  if (sp.params.length) wrap.append(params);
+  wrap.append(h('p', { class: 'desc', style: { margin: 0 } }, sp.desc || ''));
+  return wrap;
+}
+const GROUPS = [['alpha', '英字'], ['num', '数字'], ['sym', '記号'], ['shift', '記号（Shift）'], ['edit', '編集'], ['nav', '移動'], ['mod', '修飾'], ['jp', '日本語入力'], ['fn', 'ファンクション'], ['media', 'メディア']];
+const CODE_MAP = (() => {
+  const m = { Enter: 'RET', Escape: 'ESC', Backspace: 'BSPC', Tab: 'TAB', Space: 'SPACE', Minus: 'MINUS', Equal: 'EQUAL', BracketLeft: 'LBKT', BracketRight: 'RBKT', Backslash: 'BSLH',
+    Semicolon: 'SEMI', Quote: 'SQT', Backquote: 'GRAVE', Comma: 'COMMA', Period: 'DOT', Slash: 'FSLH', CapsLock: 'CAPS', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', ArrowUp: 'UP', ArrowDown: 'DOWN',
+    Home: 'HOME', End: 'END', PageUp: 'PG_UP', PageDown: 'PG_DN', Delete: 'DEL', Insert: 'INS', ShiftLeft: 'LSHFT', ShiftRight: 'RSHFT', ControlLeft: 'LCTRL', ControlRight: 'RCTRL',
+    AltLeft: 'LALT', AltRight: 'RALT', MetaLeft: 'LGUI', MetaRight: 'RGUI', Lang1: 'LANG1', Lang2: 'LANG2', IntlRo: 'INT1', IntlYen: 'INT3', KanaMode: 'INT2', Convert: 'INT4', NonConvert: 'INT5', ContextMenu: 'K_APP', PrintScreen: 'PSCRN' };
+  for (let i = 0; i < 26; i++) m['Key' + String.fromCharCode(65 + i)] = String.fromCharCode(65 + i);
+  for (let i = 0; i < 10; i++) m['Digit' + i] = 'N' + i;
+  for (let i = 1; i <= 24; i++) m['F' + i] = 'F' + i;
+  return m;
+})();
+function palette(val, kind, upd, setMouse) {
+  const pal = h('div', { class: 'palette' });
+  const { mods, base } = kcParse(val);
+  const q = (ui.palette.q || '').toLowerCase();
+  const wrapM = (name, ms) => ms.reduceRight((acc, f) => f + '(' + acc + ')', name);
+  const search = h('input', { type: 'text', id: 'pal-q', placeholder: '検索：ENTER、かな、( など', value: ui.palette.q || '', autocomplete: 'off',
+    oninput: () => { ui.palette.q = search.value; const groupsEl = pal.querySelector('.groups'); groupsEl.replaceWith(groupsView()); } });
+  const cap = h('button', { class: 'btn sm capture', 'aria-pressed': String(!!ui.capture), onclick: () => {
+    if (ui.capture) { stopCapture(); render(); return; }
+    ui.capture = e => {
+      e.preventDefault(); e.stopPropagation();
+      const name = CODE_MAP[e.code];
+      if (!name) { toast('このキーは対応表にない：' + e.code); return; }
+      const isMod = KC.byName[name].g === 'mod';
+      if (isMod && kind === 'key') { // wait for a non-mod key, unless released alone
+        ui.capture.pendingMod = name; return;
+      }
+      const ms = [];
+      if (!isMod && kind === 'key') { if (e.ctrlKey) ms.push('LC'); if (e.shiftKey) ms.push('LS'); if (e.altKey) ms.push('LA'); if (e.metaKey) ms.push('LG'); }
+      stopCapture(); upd(wrapM(name, ms));
+    };
+    ui.capture.up = e => { if (ui.capture && ui.capture.pendingMod && CODE_MAP[e.code] === ui.capture.pendingMod) { const n = ui.capture.pendingMod; stopCapture(); upd(n); } };
+    window.addEventListener('keydown', ui.capture, true); window.addEventListener('keyup', ui.capture.up, true);
+    render();
+  } }, ui.capture ? 'キーを押して…（もう一度で中止）' : '実機のキーを押して指定');
+  pal.append(h('div', { class: 'row' }, h('div', { style: { flex: '1 1 160px', minWidth: 0 } }, search), cap));
+  if (kind === 'key') {
+    const mt = h('div', { class: 'modt' }, '同時に押す修飾：');
+    MOD_FNS.forEach(([f, , sym]) => {
+      const on = mods.includes(f);
+      mt.append(h('button', { 'aria-pressed': String(on), title: f + '(…)', onclick: () => {
+        const ms = on ? mods.filter(x => x !== f) : [...mods, f];
+        upd(wrapM(base || 'A', MOD_FNS.map(x => x[0]).filter(x => ms.includes(x))));
+      } }, sym));
+    });
+    pal.append(mt);
+  }
+  function groupsView() {
+    const g = h('div', { class: 'groups' });
+    const qq = (ui.palette.q || '').toLowerCase();
+    const order = kind === 'mod' ? [GROUPS.find(x => x[0] === 'mod'), ...GROUPS.filter(x => x[0] !== 'mod')] : GROUPS;
+    for (const [gk, gl] of order) {
+      const items = KC.list.filter(e => e.g === gk && (!qq || e.n.toLowerCase().includes(qq) || e.l.toLowerCase().includes(qq) || e.a.some(a => a.toLowerCase().includes(qq))));
+      if (!items.length) continue;
+      const keys = h('div', { class: 'keys' });
+      items.forEach(e => keys.append(h('button', { 'aria-pressed': String(KC.byName[base] === e), title: e.n, onclick: () => upd(kind === 'key' ? wrapM(e.n, mods) : e.n) }, e.l)));
+      g.append(h('div', { class: 'g' }, h('h3', {}, gl), keys));
+    }
+    if (setMouse) {
+      const ms = MOUSE.filter(([v, l]) => !qq || v.toLowerCase().includes(qq) || l.includes(qq) || 'click'.includes(qq) || 'クリック'.includes(qq) || 'マウス'.includes(qq));
+      if (ms.length) { const keys = h('div', { class: 'keys' }); ms.forEach(([v, l]) => keys.append(h('button', { title: '&mkp ' + v, onclick: () => setMouse(v) }, l))); g.prepend(h('div', { class: 'g' }, h('h3', {}, 'マウスクリック'), keys)); }
+    }
+    if (!g.children.length) g.append(h('p', { class: 'hint' }, '該当なし。ZMKのキー名をそのまま使うなら下の欄に入力。'));
+    return g;
+  }
+  pal.append(groupsView());
+  const rawIn = h('input', { type: 'text', id: 'pal-raw', value: val, spellcheck: 'false', 'aria-label': 'キー名を直接入力', onchange: () => upd(rawIn.value.trim()) });
+  pal.append(h('div', { class: 'field' }, h('label', { for: 'pal-raw' }, '直接入力（例：LC(LS(A))）'), rawIn));
+  return pal;
+}
+function stopCapture() {
+  if (!ui.capture) return;
+  window.removeEventListener('keydown', ui.capture, true); window.removeEventListener('keyup', ui.capture.up, true); ui.capture = null;
+}
+
+/* ---------- inspector ---------- */
+function renderInsp() {
+  const el = $('#insp'); el.innerHTML = '';
+  if (ui.pick) {
+    el.append(h('h2', {}, '選択モード'), h('div', { class: 'empty' },
+      h('p', { style: { margin: 0 } }, 'キーボード上のキーをクリックして追加・解除。'),
+      ui.pick.kind === 'ht' ? h('p', { style: { margin: 0 } }, 'ここで選んだキーを押したときだけホールド（修飾）として判定される。同じ手のロールはタップ扱いになるので、大西配列みたいに片手連続が多い配列で誤爆が減る。') : null));
+    return;
+  }
+  if (ui.sel == null) {
+    el.append(h('h2', {}, 'キーの設定'), h('div', { class: 'empty', html:
+      '<p style="margin:0">キーをクリックすると、ここで割り当てを編集できる。</p>' +
+      '<p style="margin:0">ホームロウmodは下の「チェック」から一発で推奨設定に置き換えられる。</p>' +
+      '<p style="margin:0"><kbd>⌘Z</kbd> 戻す ・ <kbd>⌫</kbd> &amp;trans ・ <kbd>Esc</kbd> 選択解除</p>' }));
+    return;
+  }
+  const pos = ui.sel, layer = S.layers[ui.layer];
+  const side = THUMBS.has(pos) ? '親指' : LEFT[pos] ? '左手' : '右手';
+  el.append(h('div', { class: 'where' }, h('strong', {}, '位置 ' + pos), h('span', {}, `${side} ・ レイヤー ${ui.layer}「${layer.name}」`),
+    h('button', { class: 'btn ghost sm', style: { marginLeft: 'auto' }, onclick: () => { ui.sel = null; render(); } }, '閉じる')));
+  el.append(bindingEditor('key', () => S.layers[ui.layer].bindings[pos], nb => { S.layers[ui.layer].bindings[pos] = nb; commit(); }));
+  el.append(h('pre', { class: 'code', style: { padding: '8px 10px', fontSize: '12px' } }, bindingText(layer.bindings[pos])));
+  el.append(h('div', { class: 'row' },
+    h('button', { class: 'btn sm', onclick: () => { layer.bindings[pos] = { beh: 'trans', params: [] }; commit(); } }, '&trans にする'),
+    h('button', { class: 'btn sm', onclick: () => { layer.bindings[pos] = { beh: 'none', params: [] }; commit(); } }, '&none にする'),
+    h('button', { class: 'btn sm', onclick: () => { ui.clip = JSON.parse(JSON.stringify(layer.bindings[pos])); toast('コピーした：' + bindingText(ui.clip)); } }, 'コピー'),
+    h('button', { class: 'btn sm', disabled: !ui.clip, onclick: () => { layer.bindings[pos] = JSON.parse(JSON.stringify(ui.clip)); commit(); } }, '貼り付け')));
+  const across = h('div', { class: 'across' });
+  S.layers.forEach((l, i) => across.append(h('button', { 'aria-current': String(i === ui.layer), onclick: () => { ui.layer = i; render(); } },
+    h('span', { class: 'n' }, i), h('code', {}, bindingText(l.bindings[pos])))));
+  el.append(h('div', { class: 'field' }, h('span', { class: 'lbl' }, '同じ位置の各レイヤー'), across));
+}
+
+/* ---------- checks ---------- */
+function lint() {
+  const out = [];
+  const present = presentSet(S.layout);
+  const hasMtOverride = S.tailRaw.some(t => /^&mt\s*\{/.test(t));
+  const mtPos = [];
+  S.layers.forEach((l, li) => l.bindings.forEach((b, p) => {
+    const sp = spec(b.beh);
+    if (sp.undefined) out.push({ sev: 'err', msg: `<code>&${esc(b.beh)}</code> が定義されていない`, sub: `レイヤー${li} 位置${p}。ビルドが失敗する。`, at: [li, p] });
+    sp.params.forEach((k, i) => { if (k === 'layer' && !(+b.params[i] < S.layers.length)) out.push({ sev: 'err', msg: `存在しないレイヤー ${esc(b.params[i])} を参照している`, sub: `レイヤー${li} 位置${p}：<code>${esc(bindingText(b))}</code>`, at: [li, p] }); });
+    if (sp.ht && sp.params[0] === 'mod' && b.params[0] && !kcIsMod(b.params[0]) && kcIsMod(b.params[1] || ''))
+      out.push({ sev: 'warn', msg: 'ホールドとタップの引数が逆になっているかも', sub: `<code>${esc(bindingText(b))}</code> は「タップで${esc(kcLabel(b.params[1]))}・ホールドで${esc(kcLabel(b.params[0]))}」になる。`, at: [li, p],
+        act: ['入れ替える', () => { b.params = [b.params[1], b.params[0]]; commit(); }] });
+    if (b.beh === 'mt' && !THUMBS.has(p)) mtPos.push([li, p]);
+    if (b.beh === 'kp' && li === 0 && kcParse(b.params[0]).mods.length && KC.byName[kcParse(b.params[0]).base]?.g === 'alpha')
+      out.push({ sev: 'info', msg: `<code>${esc(bindingText(b))}</code> は常に修飾付きで送られる`, sub: 'mod-tapのつもりなら、ホールドタップ系に変える。', at: [li, p] });
+  }));
+  if (mtPos.length) out.unshift({ sev: 'warn', msg: `標準の <code>&amp;mt</code> が ${mtPos.length} キーで使われている`,
+    sub: (hasMtOverride ? '&mt の設定を上書きしているが、' : '') + '標準は hold-preferred / 200ms。速く打つと「Eを押して200ms以内に次のキー」でEが消えて⌃+次のキーになり、キーが反応しないように見える。ホームロウmod用のカスタムhold-tap（balanced・反対の手でだけホールド判定）に置き換えるのが定番。',
+    act: ['推奨設定に置き換え', applyHRM], at: mtPos[0] });
+  S.behaviors.forEach(b => {
+    if (b.type === 'hold-tap' && b.flavor === 'hold-preferred' && !b.priorIdle && usesBeh(x => x.beh === b.label))
+      out.push({ sev: 'info', msg: `<code>&amp;${esc(b.label)}</code> は hold-preferred で require-prior-idle-ms 無し`, sub: 'ホームロウで使うなら balanced と require-prior-idle-ms の設定がおすすめ。' });
+    if (b.type !== 'raw' && !usesBeh(x => x.beh === b.label)) out.push({ sev: 'info', msg: `<code>&amp;${esc(b.label)}</code> はどのキーにも割り当てられていない`, sub: 'Studioから割り当てる予定なら問題なし。' });
+    if (b.type === 'hold-tap') { const miss = b.holdTriggerPositions.filter(p => !present.has(p)); if (miss.length) out.push({ sev: 'info', msg: `<code>&amp;${esc(b.label)}</code> のホールド判定キーに今のレイアウトに無い位置がある`, sub: '位置 ' + miss.join(' ') }); }
+  });
+  S.combos.forEach(c => {
+    if (c.positions.length < 2) out.push({ sev: 'err', msg: `コンボ「${esc(c.name)}」のキーが2つ未満`, sub: 'コンボは2キー以上必要。' });
+    const miss = c.positions.filter(p => !present.has(p)); if (miss.length) out.push({ sev: 'warn', msg: `コンボ「${esc(c.name)}」に今のレイアウトに無い位置がある`, sub: '位置 ' + miss.join(' ') });
+  });
+  const n0 = S.layers[0].bindings.length;
+  S.layers.forEach((l, i) => { if (l.bindings.length !== n0) out.push({ sev: 'err', msg: `レイヤー${i} のキー数（${l.bindings.length}）がレイヤー0（${n0}）と違う`, sub: 'ビルドエラーになる。' }); });
+  return out;
+}
+function ensureHRM() {
+  const mk = (label, displayName, isLeft) => {
+    let b = custom(label);
+    if (!b) { b = { type: 'hold-tap', label, node: label === 'hml' ? 'homerow_mods_left' : 'homerow_mods_right', displayName, flavor: 'balanced', tappingTerm: 280, quickTap: 175, priorIdle: 150, holdTriggerPositions: [], onRelease: true, retroTap: false, bindings: ['&kp', '&kp'], extra: [] }; S.behaviors.push(b); }
+    const present = presentSet(S.layout);
+    b.holdTriggerPositions = [...present].filter(p => THUMBS.has(p) || LEFT[p] !== isLeft).sort((a, c) => a - c);
+    return b;
+  };
+  mk('hml', 'HRM 左手', true); mk('hmr', 'HRM 右手', false);
+}
+function applyHRM() {
+  ensureHRM();
+  let n = 0;
+  S.layers.forEach(l => l.bindings.forEach((b, p) => { if (b.beh === 'mt' && !THUMBS.has(p)) { b.beh = LEFT[p] ? 'hml' : 'hmr'; n++; } }));
+  commit(); toast(`${n} キーを &hml / &hmr に置き換えた`);
+}
+
+/* ---------- drawers ---------- */
+function renderDrawer() {
+  const issues = lint();
+  const errs = issues.filter(i => i.sev === 'err').length, warns = issues.filter(i => i.sev === 'warn').length;
+  const tabs = $('#dtabs'); tabs.innerHTML = '';
+  const cnt = (n, cls) => h('span', { class: 'count ' + (cls || '') }, n);
+  [['check', 'チェック', issues.length ? cnt(issues.length, errs ? 'err' : warns ? 'warn' : '') : null],
+   ['beh', 'Behavior', cnt(S.behaviors.length)], ['combo', 'コンボ', cnt(S.combos.length)], ['out', '.keymap 出力', null]].forEach(([k, l, c]) =>
+    tabs.append(h('button', { role: 'tab', 'aria-selected': String(ui.tab === k), id: 'tab-' + k, onclick: () => { ui.tab = k; render(); } }, l, c)));
+  const body = $('#dbody'); body.innerHTML = '';
+  if (ui.tab === 'check') body.append(viewCheck(issues));
+  else if (ui.tab === 'beh') body.append(viewBeh());
+  else if (ui.tab === 'combo') body.append(viewCombos());
+  else body.append(viewOut());
+}
+function viewCheck(issues) {
+  const w = h('div', { class: 'issues' });
+  if (!issues.length) w.append(h('p', { class: 'allgood', style: { margin: 0 } }, '問題は見つからなかった。「.keymap 出力」からコピーしてビルドへ。'));
+  issues.forEach(it => {
+    const sev = { err: 'エラー', warn: '注意', info: 'メモ' }[it.sev];
+    w.append(h('div', { class: 'issue ' + it.sev },
+      h('span', { class: 'sev' }, sev),
+      h('div', {}, h('p', { html: it.msg }), it.sub ? h('p', { html: it.sub }) : null),
+      h('div', { class: 'acts' },
+        it.at ? h('button', { class: 'btn sm', onclick: () => { ui.layer = it.at[0]; ui.sel = it.at[1]; ui.pick = null; render(); $('#board').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, 'キーを見る') : null,
+        it.act ? h('button', { class: 'btn sm primary', onclick: it.act[1] }, it.act[0]) : null)));
+  });
+  return w;
+}
+function useCount(label) { let n = 0; S.layers.forEach(l => l.bindings.forEach(b => { if (b.beh === label) n++; })); S.combos.forEach(c => { if (c.binding.beh === label) n++; }); return n; }
+function renameBeh(b, nl) {
+  nl = nl.trim();
+  if (!/^[a-z_][a-z0-9_]*$/i.test(nl)) { toast('ラベルは英数字と _ だけ（数字始まり不可）'); return render(); }
+  if (BUILTIN[nl] || (custom(nl) && custom(nl) !== b)) { toast('&' + nl + ' はもう使われている'); return render(); }
+  const old = b.label;
+  const fix = x => { if (x.beh === old) x.beh = nl; };
+  S.layers.forEach(l => l.bindings.forEach(fix)); S.combos.forEach(c => fix(c.binding)); S.behaviors.filter(x => x.type === 'tap-dance').forEach(x => x.bindings.forEach(fix));
+  if (ui.pick && ui.pick.label === old) ui.pick.label = nl;
+  b.label = nl; commit();
+}
+function delBeh(b) {
+  const n = useCount(b.label);
+  if (n && ui.confirmBeh !== b.label) { ui.confirmBeh = b.label; toast(`${n} キーで使用中。もう一度押すと削除して &trans に置き換える`); return; }
+  const fix = x => { if (x.beh === b.label) { x.beh = 'trans'; x.params = []; } };
+  S.layers.forEach(l => l.bindings.forEach(fix)); S.combos.forEach(c => fix(c.binding));
+  S.behaviors.splice(S.behaviors.indexOf(b), 1); ui.confirmBeh = null; if (ui.pick && ui.pick.label === b.label) ui.pick = null; commit(); toast('&' + b.label + ' を削除した');
+}
+function numField(id, label, val, onset, ph) {
+  const inp = h('input', { type: 'number', id, value: val ?? '', placeholder: ph || '未設定', min: '0', step: '5', onchange: () => onset(inp.value === '' ? null : Number(inp.value)) });
+  return h('div', { class: 'field' }, h('label', { for: id }, label), inp);
+}
+function freeLabel(base) { let i = 0, l = base; while (custom(l) || BUILTIN[l]) l = base + (++i); return l; }
+function viewBeh() {
+  const w = h('div', { class: 'stack', style: { gap: '12px' } });
+  w.append(h('div', { class: 'addrow' },
+    h('button', { class: 'btn primary', onclick: () => { ensureHRM(); commit(); toast('&hml / &hmr を用意した。キーに割り当てて使う'); } }, '+ ホームロウmod（左右セット）'),
+    h('button', { class: 'btn', onclick: () => { S.behaviors.push({ type: 'hold-tap', label: freeLabel('ht'), node: '', displayName: '', flavor: 'balanced', tappingTerm: 200, quickTap: null, priorIdle: null, holdTriggerPositions: [], onRelease: false, retroTap: false, bindings: ['&kp', '&kp'], extra: [] }); commit(); } }, '+ ホールドタップ'),
+    h('button', { class: 'btn', onclick: () => { S.behaviors.push({ type: 'tap-dance', label: freeLabel('td'), node: '', displayName: '', tappingTerm: 200, bindings: [{ beh: 'kp', params: ['A'] }, { beh: 'kp', params: ['B'] }], extra: [] }); commit(); } }, '+ タップダンス'),
+    h('button', { class: 'btn', onclick: () => { const l = freeLabel('custom'); S.behaviors.push({ type: 'raw', label: l, node: l, displayName: '', cells: 0, raw: `${l}: ${l} {\n    compatible = "zmk,behavior-macro";\n    #binding-cells = <0>;\n    bindings = <&kp A>;\n};` }); commit(); } }, '+ 自由記述（マクロ等）')));
+  w.append(h('p', { class: 'hint', html: 'ここで作ったbehaviorには <code>display-name</code> が付くので、書き出してビルドすれば ZMK Studio の一覧にも出てくる。Studioは新しいbehaviorを作れないので、定義はここ、配置はStudioでもOK。' }));
+  const cards = h('div', { class: 'cards' });
+  S.behaviors.forEach((b, bi) => {
+    const n = useCount(b.label);
+    const head = h('header', {}, h('span', { class: 'kind' }, { 'hold-tap': 'hold-tap', 'tap-dance': 'tap-dance', raw: '自由記述' }[b.type]), h('span', { class: 'ref' }, '&' + b.label),
+      h('span', { class: 'use' }, n ? `${n} キーで使用` : '未使用'),
+      h('button', { class: 'btn ghost sm', onclick: () => delBeh(b) }, '削除'));
+    const card = h('div', { class: 'card' }, head);
+    const lab = h('input', { type: 'text', id: `bl-${bi}`, value: b.label, spellcheck: 'false', onchange: () => renameBeh(b, lab.value) });
+    const dn = h('input', { type: 'text', id: `bd-${bi}`, value: b.displayName, placeholder: b.label, onchange: () => { b.displayName = dn.value; commit(); } });
+    if (b.type !== 'raw') card.append(h('div', { class: 'grid2' }, h('div', { class: 'field' }, h('label', { for: `bl-${bi}` }, 'ラベル（&名前）'), lab), h('div', { class: 'field' }, h('label', { for: `bd-${bi}` }, 'Studioでの表示名'), dn)));
+    if (b.type === 'hold-tap') {
+      const fl = h('select', { id: `bf-${bi}`, onchange: () => { b.flavor = fl.value; commit(); } });
+      FLAVORS.forEach(([v, l]) => fl.append(h('option', { value: v, selected: b.flavor === v }, l)));
+      const bs = h('select', { id: `bb-${bi}`, onchange: () => { b.bindings = bs.value.split(','); commit(); } });
+      [['&kp,&kp', 'ホールド=キー（修飾） / タップ=キー'], ['&mo,&kp', 'ホールド=レイヤー / タップ=キー']].forEach(([v, l]) => bs.append(h('option', { value: v, selected: b.bindings.join(',') === v }, l)));
+      if (!['&kp,&kp', '&mo,&kp'].includes(b.bindings.join(','))) bs.append(h('option', { value: b.bindings.join(','), selected: true }, b.bindings.join(', ')));
+      card.append(h('div', { class: 'grid2' }, h('div', { class: 'field' }, h('label', { for: `bf-${bi}` }, 'flavor'), fl), h('div', { class: 'field' }, h('label', { for: `bb-${bi}` }, '中身'), bs)));
+      card.append(h('div', { class: 'grid3' },
+        numField(`bt-${bi}`, 'tapping-term-ms', b.tappingTerm, v => { b.tappingTerm = v ?? 200; commit(); }, '200'),
+        numField(`bq-${bi}`, 'quick-tap-ms', b.quickTap, v => { b.quickTap = v; commit(); }),
+        numField(`bi-${bi}`, 'require-prior-idle-ms', b.priorIdle, v => { b.priorIdle = v; commit(); })));
+      const picking = ui.pick && ui.pick.kind === 'ht' && ui.pick.label === b.label;
+      card.append(h('div', { class: 'field' }, h('span', { class: 'lbl' }, `ホールド判定キー（hold-trigger-key-positions）${b.holdTriggerPositions.length ? ' ・ ' + b.holdTriggerPositions.length + 'キー' : ''}`),
+        h('div', { class: 'poslist' }, b.holdTriggerPositions.length ? b.holdTriggerPositions.join(' ') : '未設定（どのキーでもホールド判定）'),
+        h('div', { class: 'row' },
+          h('button', { class: 'btn sm' + (picking ? ' primary' : ''), onclick: () => { ui.pick = picking ? null : { kind: 'ht', label: b.label }; render(); if (!picking) $('#board').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, picking ? '選択を終える' : 'キーボードで選ぶ'),
+          h('button', { class: 'btn sm', onclick: () => { presetOpposite(b); commit(); } }, '反対の手＋親指'),
+          h('button', { class: 'btn sm', disabled: !b.holdTriggerPositions.length, onclick: () => { b.holdTriggerPositions = []; commit(); } }, 'クリア'))));
+      const r1 = h('input', { type: 'checkbox', id: `br-${bi}`, checked: b.onRelease, onchange: () => { b.onRelease = r1.checked; commit(); } });
+      const r2 = h('input', { type: 'checkbox', id: `bx-${bi}`, checked: b.retroTap, onchange: () => { b.retroTap = r2.checked; commit(); } });
+      card.append(h('div', { class: 'row', style: { gap: '16px' } },
+        h('label', { class: 'check', for: `br-${bi}` }, r1, 'hold-trigger-on-release'), h('label', { class: 'check', for: `bx-${bi}` }, r2, 'retro-tap')));
+      card.append(h('p', { class: 'hint', style: { margin: 0 } }, 'on-release は、同じ手の修飾同士（⌘+⇧など）の同時押しを効かせるためのもの。ホームロウmodならオン推奨。'));
+    } else if (b.type === 'tap-dance') {
+      card.append(numField(`bt-${bi}`, 'tapping-term-ms（次のタップを待つ時間）', b.tappingTerm, v => { b.tappingTerm = v ?? 200; commit(); }, '200'));
+      b.bindings.forEach((x, i) => {
+        card.append(h('div', { class: 'tdstep' }, h('span', { class: 'n' }, `${i + 1}回`),
+          bindingEditor(`td-${bi}-${i}`, () => b.bindings[i], nb => { b.bindings[i] = nb; commit(); }),
+          h('button', { class: 'btn ghost sm', disabled: b.bindings.length < 2, title: 'この段を削除', onclick: () => { b.bindings.splice(i, 1); commit(); } }, '✕')));
+      });
+      card.append(h('div', { class: 'row' }, h('button', { class: 'btn sm', onclick: () => { b.bindings.push({ beh: 'kp', params: ['A'] }); commit(); } }, '+ 段を追加')));
+      card.append(h('p', { class: 'hint', style: { margin: 0 } }, '段にhold-tapを入れると「1回タップ／ホールド」も作れる（例：1回=&mt）。'));
+    } else {
+      const ta = h('textarea', { id: `braw-${bi}`, rows: '7', spellcheck: 'false', style: { fontFamily: 'var(--f-mono)', fontSize: '12px' }, onchange: () => {
+        const m = /^\s*([\w]+)\s*:\s*([\w-]+)\s*\{/.exec(ta.value);
+        if (!m) { toast('先頭は「ラベル: ノード名 {」の形にする'); return; }
+        const oldLabel = b.label; b.raw = ta.value; b.node = m[2]; b.cells = Number((/#binding-cells\s*=\s*<\s*(\d+)/.exec(ta.value) || [0, 0])[1]);
+        if (m[1] !== oldLabel) renameBeh(b, m[1]); else commit();
+      } }, b.raw);
+      card.append(h('div', { class: 'field' }, h('label', { for: `braw-${bi}` }, 'devicetree（そのまま出力される）'), ta));
+    }
+    cards.append(card);
+  });
+  if (!S.behaviors.length) cards.append(h('p', { class: 'hint' }, 'まだ何もない。上のボタンから追加。'));
+  w.append(cards);
+  return w;
+}
+function viewCombos() {
+  const w = h('div', { class: 'stack', style: { gap: '12px' } });
+  w.append(h('div', { class: 'addrow' }, h('button', { class: 'btn primary', onclick: () => { S.combos.push({ name: 'combo_' + (S.combos.length + 1), positions: [], binding: { beh: 'mkp', params: ['LCLK'] }, layers: [], timeout: 40, extra: [] }); ui.pick = { kind: 'combo', i: S.combos.length - 1 }; commit(); $('#board').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, '+ コンボ'),
+    h('p', { class: 'hint', style: { margin: 0, alignSelf: 'center' } }, '複数キーの同時押しで別の動作。位置はキーボード上でクリックして選ぶ。')));
+  const cards = h('div', { class: 'cards' });
+  S.combos.forEach((c, ci) => {
+    const picking = ui.pick && ui.pick.kind === 'combo' && ui.pick.i === ci;
+    const nm = h('input', { type: 'text', id: `cn-${ci}`, value: c.name, onchange: () => { c.name = nm.value.trim() || c.name; commit(); } });
+    const card = h('div', { class: 'card' },
+      h('header', {}, h('span', { class: 'kind' }, 'combo'), h('span', { class: 'ref' }, c.positions.join(' + ') || '位置未設定'),
+        h('button', { class: 'btn ghost sm', style: { marginLeft: 'auto' }, onclick: () => { S.combos.splice(ci, 1); ui.pick = null; commit(); } }, '削除')),
+      h('div', { class: 'grid2' }, h('div', { class: 'field' }, h('label', { for: `cn-${ci}` }, '名前'), nm),
+        numField(`ct-${ci}`, 'timeout-ms', c.timeout, v => { c.timeout = v; commit(); }, '50')),
+      h('div', { class: 'field' }, h('span', { class: 'lbl' }, '① 同時押しするキー（上のキーボードの図でクリックして選ぶ）'),
+        h('div', { class: 'row' }, ...(c.positions.length ? c.positions.map(p => h('span', { class: 'kbd', style: { fontSize: '13px', padding: '2px 8px' } }, `${face(S.layers[0].bindings[p] || { beh: 'none', params: [] }).tap || '・'}  ${p}`)) : [h('span', { class: 'hint' }, 'まだ選んでない')])),
+        h('div', { class: 'row' }, h('button', { class: 'btn sm' + (picking ? ' primary' : ''), onclick: () => { ui.pick = picking ? null : { kind: 'combo', i: ci }; render(); if (!picking) $('#board').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, picking ? '選び終わった' : 'キーボードの図で選ぶ'),
+          c.positions.length ? h('button', { class: 'btn ghost sm', onclick: () => { c.positions = []; commit(); } }, 'クリア') : null)),
+      h('div', { class: 'field' }, h('span', { class: 'lbl' }, '② 同時押ししたときに送る動作'),
+        bindingEditor(`combo-${ci}`, () => S.combos[ci].binding, nb => { S.combos[ci].binding = nb; commit(); })));
+    const lw = h('div', { class: 'row', style: { gap: '12px' } });
+    S.layers.forEach((l, li) => { const cb = h('input', { type: 'checkbox', id: `cl-${ci}-${li}`, checked: c.layers.includes(li), onchange: () => { c.layers = cb.checked ? [...c.layers, li].sort() : c.layers.filter(x => x !== li); commit(); } }); lw.append(h('label', { class: 'check', for: `cl-${ci}-${li}` }, cb, `${li}: ${l.name}`)); });
+    card.append(h('div', { class: 'field' }, h('span', { class: 'lbl' }, '有効なレイヤー（全部オフ＝全レイヤー）'), lw));
+    cards.append(card);
+  });
+  if (!S.combos.length) cards.append(h('p', { class: 'hint' }, 'コンボはまだない。'));
+  w.append(cards);
+  return w;
+}
+function viewOut() {
+  const text = generate();
+  const pre = h('pre', { class: 'code', id: 'outCode', tabindex: '0' }, text);
+  const copy = h('button', { class: 'btn primary', onclick: async () => {
+    try { await navigator.clipboard.writeText(text); toast('.keymap をコピーした'); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('選択した。⌘C でコピー'); }
+  } }, 'コピー');
+  return h('div', { class: 'out' }, h('div', { class: 'stack', style: { minWidth: 0 } }, h('div', { class: 'row' }, copy, h('span', { class: 'hint' }, `${text.split('\n').length} 行 ・ ${S.layers.length} レイヤー ・ behavior ${S.behaviors.length}`)), pre),
+    h('div', { class: 'stack' }, h('h2', {}, '反映の手順'), h('ol', { class: 'steps', html:
+      '<li>コピーして zmk-config の <code>config/〜.keymap</code> を丸ごと置き換え、push。</li>' +
+      '<li>GitHub Actions のビルドが緑になるのを確認（赤ならエラー内容を見る）。</li>' +
+      '<li>キーマップはセントラル側だけが持っているので、<code>right_central</code> のUF2を焼けばOK。</li>' +
+      '<li><b>Studio の物理レイアウトは「' + S.layout + ' Layout」にしておく</b>。コンボとホールド判定キーの番号はこのレイアウト基準で書き出している（ZMKはこの2つを選択中レイアウトの番号で照合するため）。</li>' +
+      '<li><b>ZMK Studio で一度保存したことがあるなら「Restore Stock Settings」</b>。やらないとStudioの保存内容が優先されて、新しいキーマップが反映されない。</li>' }),
+      h('p', { class: 'hint', html: 'keymap-editor（nickcoutsos）で同じファイルを開いても読める形式で出している。ただし向こうで保存すると、ここで付けた並びやコメントは向こうの整形に変わる。' })));
+}
+
+/* ---------- import modal ---------- */
+function renderModal() {
+  const root = $('#overlayRoot'); root.innerHTML = '';
+  if (!ui.modal) return;
+  const ta = h('textarea', { id: 'importText', spellcheck: 'false', placeholder: '#include <behaviors.dtsi>\n...\n/ {\n    keymap {\n        ...' });
+  const errEl = h('p', { class: 'err-text', role: 'alert' });
+  const file = h('input', { type: 'file', id: 'importFile', accept: '.keymap,.dtsi,.overlay,.txt', onchange: () => {
+    const f = file.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { ta.value = r.result; }; r.readAsText(f);
+  } });
+  const doImport = () => {
+    try { const st = parseKeymap(ta.value); st.layout = S.layout; S = st; ui.layer = 0; ui.sel = null; ui.pick = null; ui.modal = null; commit(); toast(`読み込んだ：${S.layers.length} レイヤー、behavior ${S.behaviors.length}`); }
+    catch (e) { errEl.textContent = '読み込めなかった：' + e.message; }
+  };
+  const close = () => { ui.modal = null; render(); };
+  const modal = h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'impTitle' },
+    h('h2', { id: 'impTitle' }, '.keymap を読み込む'),
+    h('p', { class: 'hint', style: { margin: 0 } }, 'zmk-config の .keymap を貼り付けるか、ファイルを選ぶ。今の編集内容は置き換わる（⌘Zで戻せる）。'),
+    h('div', { class: 'row' }, file), ta, errEl,
+    h('div', { class: 'row', style: { justifyContent: 'space-between' } },
+      h('button', { class: 'btn ghost', onclick: () => { try { const st = parseKeymap(INITIAL); st.layout = S.layout; S = st; ui.layer = 0; ui.sel = null; ui.pick = null; ui.modal = null; commit(); toast('UF2から復元した配列に戻した'); } catch (e) { errEl.textContent = e.message; } } }, 'UF2（10/11）から復元した配列に戻す'),
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: close }, 'キャンセル'), h('button', { class: 'btn primary', onclick: doImport }, '読み込む'))));
+  const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) close(); } }, modal);
+  root.append(ov); setTimeout(() => ta.focus());
+}
+
+/* ---------- main ---------- */
+function render() {
+  if (ui.sel != null && !(ui.sel in (S.layers[ui.layer]?.bindings || []))) ui.sel = null;
+  renderTop(); renderLayers(); renderBoard(); renderInsp(); renderDrawer(); renderModal();
+}
+$('#undoBtn').onclick = undo; $('#redoBtn').onclick = redo;
+$('#importBtn').onclick = () => { ui.modal = 'import'; render(); };
+$('#exportBtn').onclick = () => { ui.tab = 'out'; render(); $('#dbody').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+document.addEventListener('keydown', e => {
+  if (ui.capture) return;
+  const t = e.target, typing = t.closest && t.closest('input, textarea, select');
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (typing) return;
+  if (e.key === 'Escape') { if (ui.modal) { ui.modal = null; render(); return; } ui.pick = null; ui.sel = null; ui.palette = null; render(); return; }
+  if (ui.sel == null || ui.pick) return;
+  const L = S.layers[ui.layer].bindings;
+  if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); L[ui.sel] = { beh: 'trans', params: [] }; commit(); }
+  else if (mod && e.key.toLowerCase() === 'c') { ui.clip = JSON.parse(JSON.stringify(L[ui.sel])); toast('コピーした：' + bindingText(ui.clip)); }
+  else if (mod && e.key.toLowerCase() === 'v' && ui.clip) { e.preventDefault(); L[ui.sel] = JSON.parse(JSON.stringify(ui.clip)); commit(); }
+});
+load();
+render();
+let rT; new ResizeObserver(() => { const w = $('#boardwrap').clientWidth; if (Math.abs(w - boardW) > 2) { boardW = w; clearTimeout(rT); rT = setTimeout(renderBoard, 30); } }).observe($('#boardwrap'));
+</script>
