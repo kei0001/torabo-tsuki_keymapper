@@ -33,3 +33,9 @@ GitHub Pages で `index.html` を開く。編集内容はブラウザの localSt
 - `src/kc.js` — ZMK キーコード表
 - `src/layouts.json` — torabo-tsuki LP の物理レイアウトと position map
 - `src/initial.keymap` — 初期表示のキーマップ（QWERTY・Base / Num / Nav の3レイヤー）
+
+## ライセンス
+
+GPL-3.0（[LICENSE](LICENSE)）。
+
+`src/layouts.json` の物理レイアウト座標と position map は、GPL-3.0 で公開されている torabo-tsuki LP 用 ZMK ファームウェア（[sekigon-gonnoc/torabo-tsuki-lp](https://github.com/sekigon-gonnoc/torabo-tsuki-lp) 系）の `torabo_tsuki_lp_layouts.dtsi` を元にしているため、本ツールも GPL-3.0 で公開する。
