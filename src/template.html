@@ -165,6 +165,10 @@ input[type="number"] { font-family: var(--f-mono); }
 .dtabs .count.warn { background: var(--warn-bg); color: var(--warn); }
 .dtabs .count.err { background: var(--err-bg); color: var(--err); }
 .dbody { padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.dial-controls { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 2fr); gap: 12px; align-items: end; }
+.dial-range { width: 100%; accent-color: var(--accent); }
+.dial-value { font-family: var(--f-mono); font-size: 14px; font-weight: 600; }
+@media (max-width: 580px) { .dial-controls { grid-template-columns: minmax(0, 1fr); } }
 
 .issues { display: grid; gap: 8px; }
 .issue { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
@@ -402,10 +406,50 @@ function parseBindings(v) {
 }
 const bindingText = b => '&' + b.beh + (b.params.length ? ' ' + b.params.join(' ') : '');
 
+/* Hires dial: preserve guarded sensor overrides and dial button keys on import. */
+const DIAL_GUARD = '#if defined(TORABO_TSUKI_LP_INPUT_HIRES_DIAL)';
+const DIAL_OVERRIDE_RE = /&\{\/keymap\/([\w-]+)\}\s*\{\s*sensor-bindings\s*=\s*<\s*&(hires_dial_scroll|hires_dial_hscroll|hires_dial_encoder)\s+([^>]+)>\s*;\s*\}\s*;/g;
+function readDialBinding(behavior, params) {
+  const args = Array.isArray(params) ? params : String(params).trim().split(/\s+/);
+  if (behavior === 'hires_dial_encoder' && args.length === 2 && args[0] === 'C_VOL_UP' && args[1] === 'C_VOL_DN') return { mode: 'volume' };
+  if (['hires_dial_scroll', 'hires_dial_hscroll'].includes(behavior) && args.length === 2
+      && args.every(x => /^\d+$/.test(x)) && args.every(x => Number(x) > 0)) {
+    return { mode: behavior === 'hires_dial_hscroll' ? 'horizontal' : 'vertical', divisor: Number(args[0]), multiplier: Number(args[1]) };
+  }
+  return null;
+}
+function dialBinding(d) {
+  if (d.mode === 'volume') return '&hires_dial_encoder C_VOL_UP C_VOL_DN';
+  const action = d.mode === 'horizontal' ? 'hires_dial_hscroll' : 'hires_dial_scroll';
+  return '&' + action + ' ' + (d.divisor || 20) + ' ' + (d.multiplier || 1);
+}
+function extractDial(text) {
+  const overrides = new Map(), buttons = [];
+  const stripOverrides = (body, found) => body.replace(DIAL_OVERRIDE_RE, (whole, node, behavior, args) => {
+    const dial = readDialBinding(behavior, args);
+    if (!dial) return whole;
+    found.set(node, dial);
+    return '';
+  });
+  const guardRE = /^[ \t]*#if[ \t]+defined\(TORABO_TSUKI_LP_INPUT_HIRES_DIAL\)[^\n]*\n([\s\S]*?)^[ \t]*#endif[^\n]*(?:\n|$)/gm;
+  let clean = text.replace(guardRE, (whole, body) => {
+    if (body.trim() === '#include <behaviors/hires_dial.dtsi>') return '';
+    if (/^&[\w-]+(?:\s+[\w-]+)*$/.test(body.trim())) { buttons.push(body.trim()); return ''; }
+    const found = new Map(), remaining = stripOverrides(body, found);
+    if (found.size && !stripComments(remaining).trim()) {
+      for (const [node, dial] of found) overrides.set(node, dial);
+      return '';
+    }
+    return whole;
+  });
+  clean = stripOverrides(clean, overrides);
+  return { text: clean, overrides, buttons };
+}
 function parseKeymap(text) {
+  const dialInput = extractDial(text);
   const mk = /tsuki-keymap-bench: combo \/ hold-trigger positions use the ([SML]) layout numbering/.exec(text);
   const posLay = mk ? mk[1] : 'L';
-  const src = stripComments(text);
+  const src = stripComments(dialInput.text);
   const includes = [], preamble = [];
   const lines = src.split('\n'), rest = [];
   for (let i = 0; i < lines.length; i++) {
@@ -437,8 +481,10 @@ function parseKeymap(text) {
       if (comp === 'zmk,keymap') {
         for (const L of node.children) {
           const ln = parseBody(L.body);
-          const extra = ln.props.filter(p => !['bindings', 'display-name', 'label'].includes(p[0]));
-          st.layers.push({ name: unq(prop(ln, 'display-name') || prop(ln, 'label')) || L.name, node: L.name, bindings: parseBindings(prop(ln, 'bindings')), extra });
+          const inlineSensor = parseBindings(prop(ln, 'sensor-bindings'))[0];
+          const inlineDial = inlineSensor ? readDialBinding(inlineSensor.beh, inlineSensor.params) : null;
+          const extra = ln.props.filter(p => !['bindings', 'display-name', 'label'].includes(p[0]) && !(p[0] === 'sensor-bindings' && inlineDial));
+          st.layers.push({ name: unq(prop(ln, 'display-name') || prop(ln, 'label')) || L.name, node: L.name, bindings: parseBindings(prop(ln, 'bindings')), extra, dial: inlineDial });
         }
       } else if (comp === 'zmk,combos') {
         for (const C of node.children) {
@@ -455,6 +501,16 @@ function parseKeymap(text) {
     }
   }
   if (!st.layers.length) throw new Error('keymap ノード（compatible = "zmk,keymap"）が見つからない');
+  if (dialInput.buttons.length && dialInput.buttons.length !== st.layers.length)
+    throw new Error('ダイヤル押し込みキーの条件付き定義数がレイヤー数と一致しない');
+  st.layers.forEach((layer, i) => {
+    if (dialInput.overrides.has(layer.node)) {
+      layer.dial = dialInput.overrides.get(layer.node);
+      dialInput.overrides.delete(layer.node);
+    }
+    if (dialInput.buttons.length) layer.dialButton = dialInput.buttons[i];
+  });
+  if (dialInput.overrides.size) throw new Error('一致するレイヤーがないダイヤル設定: ' + [...dialInput.overrides.keys()].join(', '));
   return st;
 }
 function parseBehavior(B, posLay = 'L') {
@@ -523,6 +579,7 @@ function generate() {
   for (const n of need) if (!inc.some(x => x.replace(/\s+/g, ' ') === n)) inc.push(n);
   out.push(`// tsuki-keymap-bench: combo / hold-trigger positions use the ${S.layout} layout numbering`);
   out.push(...inc);
+  if (S.layers.some(l => l.dial)) out.push('', DIAL_GUARD, '#include <behaviors/hires_dial.dtsi>', '#endif');
   if (S.preamble.length) out.push('', ...S.preamble);
   out.push('', '/ {');
   const used = new Set();
@@ -575,17 +632,28 @@ function generate() {
     out.push(IND(4) + '};', '');
   }
   out.push(IND(4) + 'keymap {', IND(8) + 'compatible = "zmk,keymap";', '');
-  const lu = new Set();
+  const lu = new Set(), layerNodes = [];
   S.layers.forEach((l, i) => {
-    out.push(IND(8) + nodeName(l.node || l.name || 'layer_' + i, lu) + ' {');
+    const node = nodeName(l.node || l.name || 'layer_' + i, lu);
+    layerNodes.push(node);
+    out.push(IND(8) + node + ' {');
     out.push(IND(12) + `display-name = "${String(l.name).replace(/"/g, "'")}";`);
     for (const [k, v] of l.extra || []) out.push(IND(12) + (v === true ? `${k};` : `${k} = ${v};`));
     out.push(IND(12) + 'bindings = <');
     out.push(fmtRows(l.bindings.map(bindingText), 0));
+    if (l.dialButton) out.push(DIAL_GUARD, l.dialButton, '#endif');
     out.push(IND(12) + '>;', IND(8) + '};', '');
   });
   out.push(IND(4) + '};', '};');
   if (S.tailRaw.length) out.push('', ...S.tailRaw);
+  if (S.layers.some(l => l.dial)) {
+    out.push('', DIAL_GUARD);
+    S.layers.forEach((l, i) => {
+      if (!l.dial) return;
+      out.push('&{/keymap/' + layerNodes[i] + '} {', '    sensor-bindings = <' + dialBinding(l.dial) + '>;', '};', '');
+    });
+    out.push('#endif');
+  }
   return out.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
 }
 
@@ -1060,12 +1128,14 @@ function renderDrawer() {
   const tabs = $('#dtabs'); tabs.innerHTML = '';
   const cnt = (n, cls) => h('span', { class: 'count ' + (cls || '') }, n);
   [['check', 'チェック', issues.length ? cnt(issues.length, errs ? 'err' : warns ? 'warn' : '') : null],
-   ['beh', 'Behavior', cnt(S.behaviors.length)], ['combo', 'コンボ', cnt(S.combos.length)], ['out', '.keymap 出力', null]].forEach(([k, l, c]) =>
+   ['beh', 'Behavior', cnt(S.behaviors.length)], ['combo', 'コンボ', cnt(S.combos.length)],
+   ['dial', 'ダイヤル', cnt(S.layers.filter(l => l.dial).length)], ['out', '.keymap 出力', null]].forEach(([k, l, c]) =>
     tabs.append(h('button', { role: 'tab', 'aria-selected': String(ui.tab === k), id: 'tab-' + k, onclick: () => { ui.tab = k; render(); } }, l, c)));
   const body = $('#dbody'); body.innerHTML = '';
   if (ui.tab === 'check') body.append(viewCheck(issues));
   else if (ui.tab === 'beh') body.append(viewBeh());
   else if (ui.tab === 'combo') body.append(viewCombos());
+  else if (ui.tab === 'dial') body.append(viewDial());
   else body.append(viewOut());
 }
 function viewCheck(issues) {
@@ -1196,6 +1266,46 @@ function viewCombos() {
   });
   if (!S.combos.length) cards.append(h('p', { class: 'hint' }, 'コンボはまだない。'));
   w.append(cards);
+  return w;
+}
+function viewDial() {
+  const w = h('div', { class: 'stack', style: { gap: '14px' } });
+  w.append(h('p', { class: 'hint', style: { margin: 0 } },
+    '高分解能ダイヤルの動作をレイヤーごとに設定。スクロール量100%は &hires_dial_scroll 10 1 相当。50%なら、同じ角度だけ回したときのスクロール量が約半分になります。'));
+  const cards = h('div', { class: 'cards' });
+  S.layers.forEach((layer, i) => {
+    const d = layer.dial;
+    const id = 'dial-mode-' + i;
+    const options = [['none', '設定なし'], ['vertical', '縦スクロール'], ['horizontal', '横スクロール'], ['volume', '音量調整']];
+    const mode = h('select', { id, onchange: () => {
+      const next = mode.value;
+      layer.dial = next === 'none' ? null : { mode: next, divisor: d?.divisor || 20, multiplier: d?.multiplier || 1 };
+      layer.extra = (layer.extra || []).filter(p => p[0] !== 'sensor-bindings');
+      commit();
+    } }, ...options.map(([value, label]) => h('option', { value, selected: (d?.mode || 'none') === value }, label)));
+    const inner = h('div', { class: 'dial-controls' }, h('div', { class: 'field' }, h('label', { for: id }, '動作'), mode));
+    if (d && (d.mode === 'vertical' || d.mode === 'horizontal')) {
+      const pct = 1000 * (d.multiplier || 1) / (d.divisor || 20);
+      const pctLabel = h('span', { class: 'dial-value' }, Number(pct.toFixed(1)) + '%');
+      const val = h('div', { class: 'field' },
+        h('label', { for: 'dial-speed-' + i }, 'スクロール量（基準比）'),
+        h('div', { class: 'row', style: { justifyContent: 'space-between' } },
+          h('span', { class: 'hint' }, '少ない'), pctLabel, h('span', { class: 'hint' }, '多い')));
+      const speed = h('input', { id: 'dial-speed-' + i, class: 'dial-range', type: 'range', min: '5', max: '200', step: '1',
+        value: String(Math.min(200, Math.max(5, pct))),
+        oninput: () => { pctLabel.textContent = speed.value + '%'; },
+        onchange: () => { d.divisor = Math.max(1, Math.round(1000 * (d.multiplier || 1) / Number(speed.value))); commit(); }
+      });
+      val.append(speed);
+      inner.append(val);
+    }
+    const card = h('div', { class: 'card' },
+      h('header', {}, h('span', { class: 'kind' }, 'Layer ' + i), h('span', { class: 'ref' }, layer.name)), inner);
+    if (d) card.append(h('p', { class: 'hint', style: { margin: 0 } },
+      d.mode === 'volume' ? '回転方向で音量を調整します。' : '生成される設定：' + dialBinding(d)));
+    cards.append(card);
+  });
+  w.append(cards, h('p', { class: 'hint', html: '反映には <code>.keymap 出力</code> から書き出してZMKを再ビルドし、UF2を書き込む必要があります。<code>input-hires-dial</code> と <code>split-input-hires-dial</code> のsnippetを有効にしたファームウェア向けの設定です。変更はキーマップに保存されるため「戻す／やり直す」も使えます。' }));
   return w;
 }
 function viewOut() {
