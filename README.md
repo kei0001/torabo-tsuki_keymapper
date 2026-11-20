@@ -12,12 +12,19 @@ ZMK Studio は既存の behavior をキーに割り当てるだけで、hold-tap
 - tap-dance、コンボ、自由記述の behavior（マクロ等）
 - 標準 `&mt` の誤爆しやすさ、引数の逆、未定義の behavior などをチェック
 - `.keymap` の読み込みと書き出し（`display-name` 付きなので ZMK Studio にも表示される）
+- 高分解能ダイヤルのレイヤー別設定：縦／横スクロール、音量調整、スクロール量（5〜200%）をGUIで編集。対応する `sensor-bindings` を `.keymap` に出力
 
 ## 使い方
 
 GitHub Pages で `index.html` を開く。編集内容はブラウザの localStorage に保存される。
 
 書き出した `.keymap` を zmk-config に置いてビルドし、セントラル側の UF2 を焼く。ZMK Studio で保存したことがある場合は「Restore Stock Settings」をしてから確認する。
+
+## 高分解能ダイヤルの調整
+
+「ダイヤル」タブで各レイヤーの動作（設定なし／縦スクロール／横スクロール／音量調整）を選び、スクロール時はスライダーで量を調整します。100%は `&hires_dial_scroll 10 1`、50%は `20 1` に相当します。設定はローカル保存とUndo/Redoに対応します。
+
+`.keymap` の書き出しでは、ダイヤル設定があるレイヤーを `TORABO_TSUKI_LP_INPUT_HIRES_DIAL` 条件付きの `sensor-bindings` として出力します。既存の `feature/hires-dial` 設定にある条件付き押し込みキーも、読み込みと書き出しで保持します。読み込んだキーマップの内容を変更しても即座に実機に反映されるわけではなく、対応snippetを有効にして再ビルド・UF2書き込みが必要です。ZMK Studio上でダイヤル感度を直接変更する機能ではありません。
 
 ## 位置番号について
 
