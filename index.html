@@ -201,6 +201,9 @@ input[type="number"] { font-family: var(--f-mono); }
 .check { display: flex; gap: 6px; align-items: center; font-size: 13px; }
 .poslist { font-family: var(--f-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 .tdstep { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.four-action { border: 1px solid var(--line); border-radius: 8px; padding: 8px; min-width: 0; }
+.four-action-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; margin-bottom: 6px; }
+.four-action-title strong { font-family: var(--f-mono); font-size: 12px; }
 .tdstep .n { font-family: var(--f-mono); font-size: 12px; color: var(--muted); padding-top: 7px; }
 .addrow { display: flex; gap: 8px; flex-wrap: wrap; }
 .hint { font-size: 12.5px; color: var(--muted); max-width: 70ch; }
@@ -486,6 +489,7 @@ function spec(beh) {
     const k0 = (b.bindings[0] || '&kp').replace('&', ''), k1 = (b.bindings[1] || '&kp').replace('&', '');
     const kind = x => x === 'kp' ? 'key' : (['mo', 'to', 'tog', 'sl'].includes(x) ? 'layer' : 'raw');
     const p0 = kind(k0) === 'key' ? 'mod' : kind(k0);
+    if (isFourHelper(b)) return { name: (b.displayName || b.label) + '（&' + b.label + '）', params: [k0, k1].map(k => BUILTIN[k].params[0] || 'raw'), ht: true, custom: b, desc: '4アクション用のhold-tap。' };
     return { name: (b.displayName || b.label) + '（&' + b.label + '）', params: [p0, kind(k1)], ht: true, custom: b,
       desc: `カスタム hold-tap：${b.flavor || 'hold-preferred'} / ${b.tappingTerm || 200}ms` + (b.holdTriggerPositions.length ? ` / 反対側の手でホールド判定（${b.holdTriggerPositions.length}キー）` : '') };
   }
@@ -715,7 +719,7 @@ function nodeName(s, used) {
   used.add(k); return k;
 }
 function usesBeh(pred) {
-  const all = [...S.layers.flatMap(l => l.bindings), ...S.combos.map(c => c.binding), ...S.behaviors.filter(b => b.type === 'tap-dance').flatMap(b => b.bindings)];
+  const all = [...S.layers.flatMap(l => l.bindings), ...S.combos.map(c => c.binding), ...S.behaviors.filter(b => b.type === 'tap-dance').flatMap(b => b.bindings), ...S.behaviors.filter(b => b.type === 'hold-tap').flatMap(b => b.bindings.map(x => ({ beh: x.replace(/^&/, ''), params: [] })))];
   return all.some(pred);
 }
 function generate() {
@@ -855,7 +859,11 @@ function face(b) {
         f.hold = isLayer ? layerName(+p[0]) : kcLabel(p[0]); if (isLayer) f.holdLayer = +p[0];
         f.cls.push('ht');
       } else if (sp.custom && sp.custom.type === 'tap-dance') {
-        f.tap = sp.custom.bindings.map(x => face(x).tap || '·').join(' '); f.hold = 'TD×' + sp.custom.bindings.length;
+        if (isFourDance(sp.custom)) {
+          const ps = sp.custom.bindings.map(fourPair);
+          f.tap = ps.map(p => face(p.tap).tap || '·').join(' / ');
+          f.hold = 'TD4';
+        } else { f.tap = sp.custom.bindings.map(x => face(x).tap || '·').join(' '); f.hold = 'TD×' + sp.custom.bindings.length; }
       } else { f.tap = '&' + b.beh; f.hold = p.join(' '); }
   }
   return f;
@@ -1072,21 +1080,24 @@ function defaultParams(kinds, old) {
   const oldKey = old ? (spec(old.beh).params.map((k, i) => k === 'key' ? old.params[i] : null).filter(Boolean).pop()) : null;
   return kinds.map(k => ({ key: oldKey || 'A', mod: 'LSHFT', layer: '1', mouse: 'LCLK', bt: 'BT_CLR', out: 'OUT_TOG', raw: '' }[k]));
 }
-function bindingEditor(ctx, get, set) {
+function bindingEditor(ctx, get, set, allowed = null) {
   const b = get(), sp = spec(b.beh);
   const wrap = h('div', { class: 'stack' });
   const sel = h('select', { id: 'beh-' + ctx, 'aria-label': 'behavior', onchange: () => {
     const nb = { beh: sel.value, params: defaultParams(spec(sel.value).params, b) };
+    if (allowed) spec(sel.value).params.forEach((k, i) => { if (k === 'layer' && +nb.params[i] >= S.layers.length) nb.params[i] = '0'; });
     ui.palette = null; set(nb);
   } });
-  for (const [g, items] of behOptions(b.beh)) {
+  for (const [g, allItems] of behOptions(b.beh)) {
+    const items = allowed ? allItems.filter(it => allowed.has(it) || it === b.beh) : allItems;
+    if (!items.length) continue;
     const og = h('optgroup', { label: g });
     items.forEach(it => og.append(h('option', { value: it, selected: it === b.beh }, spec(it).name)));
     sel.append(og);
   }
   wrap.append(h('div', { class: 'field' }, h('label', { for: 'beh-' + ctx }, '動作'), sel));
   const params = h('div', { class: 'params' });
-  const names = sp.ht ? (sp.params[0] === 'layer' ? ['ホールド（レイヤー）', 'タップ'] : ['ホールド（修飾）', 'タップ']) : sp.params.map(() => '');
+  const names = sp.ht ? (isFourHelper(sp.custom) ? ['ホールド', 'タップ'] : sp.params[0] === 'layer' ? ['ホールド（レイヤー）', 'タップ'] : ['ホールド（修飾）', 'タップ']) : sp.params.map(() => '');
   sp.params.forEach((kind, i) => {
     const id = `p-${ctx}-${i}`, val = b.params[i] ?? '';
     const upd = v => { const nb = { beh: b.beh, params: [...b.params] }; nb.params[i] = v; set(nb); };
@@ -1096,7 +1107,7 @@ function bindingEditor(ctx, get, set) {
       ctl = h('button', { class: 'chip', id, 'aria-expanded': String(!!open), onclick: () => { ui.palette = open ? null : { ctx, i, q: '' }; render(); } },
         h('span', { class: 'big' }, kcLabel(val) || '—'), h('code', {}, val || '未設定'));
       params.append(h('div', { class: 'field' }, h('span', { class: 'lbl' }, names[i] || (kind === 'mod' ? '修飾キー' : 'キー')), ctl));
-      if (open) params.append(palette(val, kind, upd, b.beh === 'kp' ? (m => { ui.palette = null; set({ beh: 'mkp', params: [m] }); }) : null));
+      if (open) params.append(palette(val, kind, upd, b.beh === 'kp' && (!allowed || allowed.has('mkp')) ? (m => { ui.palette = null; set({ beh: 'mkp', params: [m] }); }) : null));
       return;
     }
     if (kind === 'layer') { ctl = h('select', { id, onchange: () => upd(ctl.value) }); S.layers.forEach((l, li) => ctl.append(h('option', { value: li, selected: +val === li }, `${li}: ${l.name}`))); }
@@ -1186,6 +1197,78 @@ function stopCapture() {
   window.removeEventListener('keydown', ui.capture, true); window.removeEventListener('keyup', ui.capture.up, true); ui.capture = null;
 }
 
+/* ---------- four-action tap dance ---------- */
+// Keep the normal tap-dance / hold-tap model, including on .keymap import.
+const FOUR_ACTIONS = new Set(['kp', 'none', 'mo', 'to', 'tog', 'sl', 'sk', 'mkp', 'mmv', 'msc', 'out', 'caps_word', 'key_repeat', 'gresc']);
+const FOUR_HELPER_NAME = '4-action hold-tap';
+const noAction = () => ({ beh: 'none', params: [] });
+function isFourHelper(b) {
+  return b?.type === 'hold-tap' && b.displayName === FOUR_HELPER_NAME &&
+    b.bindings.length === 2 && b.bindings.every(x => FOUR_ACTIONS.has(x.slice(1))) &&
+    b.flavor === 'hold-preferred' && b.quickTap == null && b.priorIdle == null &&
+    !b.holdTriggerPositions.length && !b.onRelease && !b.retroTap && !(b.extra || []).length;
+}
+function fourPair(step) {
+  const b = custom(step.beh);
+  if (!isFourHelper(b) || step.params.length !== 2) return null;
+  const [hold, tap] = b.bindings.map((x, i) => {
+    const beh = x.slice(1);
+    return { beh, params: BUILTIN[beh].params.length ? [step.params[i]] : [] };
+  });
+  return { tap, hold, term: b.tappingTerm };
+}
+function isFourDance(b) {
+  return b?.type === 'tap-dance' && b.bindings.length === 2 && b.bindings.every(x => !!fourPair(x));
+}
+function makeFourPair(tap, hold, term = 200) {
+  if (![tap, hold].every(x => FOUR_ACTIONS.has(x.beh) && x.params.length === BUILTIN[x.beh].params.length)) throw new Error('4アクションで使えない動作');
+  const bindings = ['&' + hold.beh, '&' + tap.beh];
+  let b = S.behaviors.find(x => isFourHelper(x) && x.tappingTerm === term && x.bindings.join(',') === bindings.join(','));
+  if (!b) {
+    b = { type: 'hold-tap', label: freeLabel('td4_ht'), node: '', displayName: FOUR_HELPER_NAME, flavor: 'hold-preferred', tappingTerm: term, quickTap: null, priorIdle: null, holdTriggerPositions: [], onRelease: false, retroTap: false, bindings, extra: [] };
+    S.behaviors.push(b);
+  }
+  return { beh: b.label, params: [hold.params[0] || '0', tap.params[0] || '0'] };
+}
+function createFourDance(initial) {
+  let tap = initial && FOUR_ACTIONS.has(initial.beh) ? { beh: initial.beh, params: [...initial.params] } : noAction();
+  let hold = noAction();
+  if (initial && ['mt', 'lt'].includes(initial.beh) && initial.params.length === 2) {
+    tap = { beh: 'kp', params: [initial.params[1]] };
+    hold = { beh: initial.beh === 'mt' ? 'kp' : 'mo', params: [initial.params[0]] };
+  }
+  const label = freeLabel('td4');
+  const b = { type: 'tap-dance', label, node: '', displayName: '', tappingTerm: 150,
+    bindings: [makeFourPair(tap, hold), makeFourPair(noAction(), noAction())], extra: [] };
+  S.behaviors.push(b);
+  return b;
+}
+function fourActionEditor(ctx, b, showTiming = true) {
+  const w = h('div', { class: 'stack', style: { gap: '10px' } });
+  const names = [['Single Tap', '1回タップ'], ['Hold', '1回長押し'], ['Double Tap', '2回タップ'], ['Tap & Hold', '2回目を長押し']];
+  const pairs = b.bindings.map(fourPair);
+  names.forEach(([name, detail], i) => {
+    const j = Math.floor(i / 2), action = i % 2 ? 'hold' : 'tap';
+    const update = nb => {
+      const p = fourPair(b.bindings[j]); p[action] = nb;
+      b.bindings[j] = makeFourPair(p.tap, p.hold, p.term); ui.palette = null; commit();
+    };
+    w.append(h('div', { class: 'four-action' },
+      h('div', { class: 'four-action-title' }, h('strong', {}, name), h('span', { class: 'hint' }, detail)),
+      bindingEditor(ctx + '-a' + i, () => pairs[j][action], update, FOUR_ACTIONS)));
+  });
+  if (showTiming) {
+    const valid = (v, fallback) => v == null ? fallback : Math.min(2000, Math.max(1, Math.round(v) || fallback));
+    w.append(h('div', { class: 'grid2' },
+      numField(ctx + '-tdterm', 'タップ間隔（ms）', b.tappingTerm, v => { b.tappingTerm = valid(v, 150); commit(); }, '150'),
+      ...pairs.map((p, j) => numField(ctx + '-htterm' + j, (j + 1) + '回目のホールド判定（ms）', p.term, v => {
+        const cur = fourPair(b.bindings[j]); b.bindings[j] = makeFourPair(cur.tap, cur.hold, valid(v, 200)); commit();
+      }, '200'))));
+  }
+  w.append(h('p', { class: 'hint', style: { margin: 0 } }, '4つの動作は標準ZMKのTap DanceとHold-Tapに変換される。単押しの確定には待ち時間があり、他のキーで中断された場合も判定される。同じBehaviorを割り当てたキーには編集が共通で反映される。'));
+  return w;
+}
+
 /* ---------- inspector ---------- */
 function renderInsp() {
   const el = $('#insp'); el.innerHTML = '';
@@ -1207,6 +1290,17 @@ function renderInsp() {
   el.append(h('div', { class: 'where' }, h('strong', {}, '位置 ' + pos), h('span', {}, `${side} ・ レイヤー ${ui.layer}「${layer.name}」`),
     h('button', { class: 'btn ghost sm', style: { marginLeft: 'auto' }, onclick: () => { ui.sel = null; render(); } }, '閉じる')));
   el.append(bindingEditor('key', () => S.layers[ui.layer].bindings[pos], nb => { S.layers[ui.layer].bindings[pos] = nb; commit(); }));
+  const assigned = custom(layer.bindings[pos].beh);
+  if (isFourDance(assigned)) {
+    el.append(h('h2', {}, '4アクション'), fourActionEditor('key-four', assigned));
+  } else {
+    el.append(h('button', { class: 'btn', onclick: () => {
+      const old = layer.bindings[pos];
+      const canKeep = FOUR_ACTIONS.has(old.beh) || ['mt', 'lt', 'trans'].includes(old.beh);
+      if (!canKeep && !confirm('現在の割り当てを4アクションに置き換えますか？')) return;
+      const b = createFourDance(old); layer.bindings[pos] = { beh: b.label, params: [] }; ui.palette = null; commit();
+    } }, '+ 4アクション（Tap Dance）'));
+  }
   el.append(h('pre', { class: 'code', style: { padding: '8px 10px', fontSize: '12px' } }, bindingText(layer.bindings[pos])));
   el.append(h('div', { class: 'row' },
     h('button', { class: 'btn sm', onclick: () => { layer.bindings[pos] = { beh: 'trans', params: [] }; commit(); } }, '&trans にする'),
@@ -1301,7 +1395,7 @@ function viewCheck(issues) {
   });
   return w;
 }
-function useCount(label) { let n = 0; S.layers.forEach(l => l.bindings.forEach(b => { if (b.beh === label) n++; })); S.combos.forEach(c => { if (c.binding.beh === label) n++; }); return n; }
+function useCount(label) { let n = 0; S.layers.forEach(l => l.bindings.forEach(b => { if (b.beh === label) n++; })); S.combos.forEach(c => { if (c.binding.beh === label) n++; }); S.behaviors.filter(b => b.type === 'tap-dance').forEach(b => b.bindings.forEach(x => { if (x.beh === label) n++; })); return n; }
 function renameBeh(b, nl) {
   nl = nl.trim();
   if (!/^[a-z_][a-z0-9_]*$/i.test(nl)) { toast('ラベルは英数字と _ だけ（数字始まり不可）'); return render(); }
@@ -1316,7 +1410,7 @@ function delBeh(b) {
   const n = useCount(b.label);
   if (n && ui.confirmBeh !== b.label) { ui.confirmBeh = b.label; toast(`${n} キーで使用中。もう一度押すと削除して &trans に置き換える`); return; }
   const fix = x => { if (x.beh === b.label) { x.beh = 'trans'; x.params = []; } };
-  S.layers.forEach(l => l.bindings.forEach(fix)); S.combos.forEach(c => fix(c.binding));
+  S.layers.forEach(l => l.bindings.forEach(fix)); S.combos.forEach(c => fix(c.binding)); S.behaviors.filter(x => x.type === 'tap-dance').forEach(x => x.bindings.forEach(fix));
   S.behaviors.splice(S.behaviors.indexOf(b), 1); ui.confirmBeh = null; if (ui.pick && ui.pick.label === b.label) ui.pick = null; commit(); toast('&' + b.label + ' を削除した');
 }
 function numField(id, label, val, onset, ph) {
@@ -1327,7 +1421,8 @@ function freeLabel(base) { let i = 0, l = base; while (custom(l) || BUILTIN[l]) 
 function viewBeh() {
   const w = h('div', { class: 'stack', style: { gap: '12px' } });
   w.append(h('div', { class: 'addrow' },
-    h('button', { class: 'btn primary', onclick: () => { ensureHRM(); commit(); toast('&hml / &hmr を用意した。キーに割り当てて使う'); } }, '+ ホームロウmod（左右セット）'),
+    h('button', { class: 'btn primary', onclick: () => { createFourDance({ beh: 'kp', params: ['A'] }); commit(); } }, '+ 4アクション'),
+    h('button', { class: 'btn', onclick: () => { ensureHRM(); commit(); toast('&hml / &hmr を用意した。キーに割り当てて使う'); } }, '+ ホームロウmod（左右セット）'),
     h('button', { class: 'btn', onclick: () => { S.behaviors.push({ type: 'hold-tap', label: freeLabel('ht'), node: '', displayName: '', flavor: 'balanced', tappingTerm: 200, quickTap: null, priorIdle: null, holdTriggerPositions: [], onRelease: false, retroTap: false, bindings: ['&kp', '&kp'], extra: [] }); commit(); } }, '+ ホールドタップ'),
     h('button', { class: 'btn', onclick: () => { S.behaviors.push({ type: 'tap-dance', label: freeLabel('td'), node: '', displayName: '', tappingTerm: 200, bindings: [{ beh: 'kp', params: ['A'] }, { beh: 'kp', params: ['B'] }], extra: [] }); commit(); } }, '+ タップダンス'),
     h('button', { class: 'btn', onclick: () => { const l = freeLabel('custom'); S.behaviors.push({ type: 'raw', label: l, node: l, displayName: '', cells: 0, raw: `${l}: ${l} {\n    compatible = "zmk,behavior-macro";\n    #binding-cells = <0>;\n    bindings = <&kp A>;\n};` }); commit(); } }, '+ 自由記述（マクロ等）')));
@@ -1335,7 +1430,7 @@ function viewBeh() {
   const cards = h('div', { class: 'cards' });
   S.behaviors.forEach((b, bi) => {
     const n = useCount(b.label);
-    const head = h('header', {}, h('span', { class: 'kind' }, { 'hold-tap': 'hold-tap', 'tap-dance': 'tap-dance', raw: '自由記述' }[b.type]), h('span', { class: 'ref' }, '&' + b.label),
+    const head = h('header', {}, h('span', { class: 'kind' }, isFourDance(b) ? '4-action' : isFourHelper(b) ? '4-action helper' : { 'hold-tap': 'hold-tap', 'tap-dance': 'tap-dance', raw: '自由記述' }[b.type]), h('span', { class: 'ref' }, '&' + b.label),
       h('span', { class: 'use' }, n ? `${n} キーで使用` : '未使用'),
       h('button', { class: 'btn ghost sm', onclick: () => delBeh(b) }, '削除'));
     const card = h('div', { class: 'card' }, head);
@@ -1365,6 +1460,10 @@ function viewBeh() {
       card.append(h('div', { class: 'row', style: { gap: '16px' } },
         h('label', { class: 'check', for: `br-${bi}` }, r1, 'hold-trigger-on-release'), h('label', { class: 'check', for: `bx-${bi}` }, r2, 'retro-tap')));
       card.append(h('p', { class: 'hint', style: { margin: 0 } }, 'on-release は、同じ手の修飾同士（⌘+⇧など）の同時押しを効かせるためのもの。ホームロウmodならオン推奨。'));
+    } else if (isFourDance(b)) {
+      card.append(fourActionEditor('four-' + bi, b));
+      const advanced = h('details', {}, h('summary', { class: 'hint' }, '内部のTap Dance定義（参照用）'), h('pre', { class: 'code', style: { padding: '8px', fontSize: '12px' } }, b.bindings.map(bindingText).join('\n')));
+      card.append(advanced);
     } else if (b.type === 'tap-dance') {
       card.append(numField(`bt-${bi}`, 'tapping-term-ms（次のタップを待つ時間）', b.tappingTerm, v => { b.tappingTerm = v ?? 200; commit(); }, '200'));
       b.bindings.forEach((x, i) => {
