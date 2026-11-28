@@ -126,6 +126,8 @@ button { cursor: pointer; }
 /* inspector */
 .insp { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 12px; min-width: 0; position: sticky; top: env(safe-area-inset-top, 0px); }
 @media (max-width: 980px) { .insp { position: static; } }
+.insp { max-height: min(52vh, 460px); overflow-y: auto; overscroll-behavior-y: contain; align-content: start; scrollbar-gutter: stable; }
+@media (max-width: 980px) { .insp { max-height: 48vh; } }
 .insp h2, .drawer h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 600; }
 .insp .where { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .insp .where strong { font-family: var(--f-display); font-size: 20px; font-weight: 800; }
@@ -832,8 +834,11 @@ function toast(msg) { const r = $('#toastRoot'); r.innerHTML = ''; r.append(h('d
 /* ---------- faces ---------- */
 const layerName = i => (S.layers[i] ? S.layers[i].name : 'L' + i);
 const layerHue = i => [250, 150, 25, 300, 75, 200, 340, 110][i % 8];
-function face(b) {
-  const sp = spec(b.beh), p = b.params;
+function face(b, seen = new Set()) {
+  if (!b) return { tap: '—', hold: '', cls: [], holdLayer: null };
+  if (seen.has(b.beh)) return { tap: '&' + b.beh, hold: '循環参照', cls: [], holdLayer: null };
+  const next = new Set(seen); next.add(b.beh);
+  const sp = spec(b.beh), p = b.params || [];
   const f = { tap: '', hold: '', cls: [], holdLayer: null };
   switch (b.beh) {
     case 'kp': f.tap = kcLabel(p[0]); break;
@@ -861,9 +866,9 @@ function face(b) {
       } else if (sp.custom && sp.custom.type === 'tap-dance') {
         if (isFourDance(sp.custom)) {
           const ps = sp.custom.bindings.map(fourPair);
-          f.tap = ps.map(p => face(p.tap).tap || '·').join(' / ');
+          f.tap = ps.map(p => face(p.tap, next).tap || '·').join(' / ');
           f.hold = 'TD4';
-        } else { f.tap = sp.custom.bindings.map(x => face(x).tap || '·').join(' '); f.hold = 'TD×' + sp.custom.bindings.length; }
+        } else { f.tap = sp.custom.bindings.map(x => face(x, next).tap || '·').join(' '); f.hold = 'TD×' + sp.custom.bindings.length; }
       } else { f.tap = '&' + b.beh; f.hold = p.join(' '); }
   }
   return f;
@@ -1366,7 +1371,9 @@ function applyHRM() {
 
 /* ---------- drawers ---------- */
 function renderDrawer() {
-  const issues = lint();
+  let issues;
+  try { issues = lint(); }
+  catch (e) { console.error('Keymap check:', e); issues = [{ sev: 'err', msg: 'キーマップのチェック中にエラーが発生した', sub: esc(e.message || e) }]; }
   const errs = issues.filter(i => i.sev === 'err').length, warns = issues.filter(i => i.sev === 'warn').length;
   const tabs = $('#dtabs'); tabs.innerHTML = '';
   const cnt = (n, cls) => h('span', { class: 'count ' + (cls || '') }, n);
@@ -1601,7 +1608,16 @@ function renderModal() {
 /* ---------- main ---------- */
 function render() {
   if (ui.sel != null && !(ui.sel in (S.layers[ui.layer]?.bindings || []))) ui.sel = null;
-  renderTop(); renderLayers(); renderBoard(); renderInsp(); renderDrawer(); renderModal();
+  // Each panel is independent: a problem in a key preview must not hide the settings tabs.
+  renderTop(); renderLayers();
+  for (const [id, draw] of [['board', renderBoard], ['insp', renderInsp], ['dbody', renderDrawer], ['overlayRoot', renderModal]]) {
+    try { draw(); }
+    catch (e) {
+      console.error('Keymapper ' + id + ':', e);
+      const panel = $('#' + id);
+      if (panel) panel.append(h('p', { class: 'err-text', role: 'alert' }, '表示エラー：' + (e.message || e)));
+    }
+  }
 }
 $('#presetSel').onchange = e => { if (e.target.value) applyPreset(e.target.value); };
 $('#undoBtn').onclick = undo; $('#redoBtn').onclick = redo;
